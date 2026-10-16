@@ -42,23 +42,19 @@
     var s = raw.trim();
     if (!s) return null;
 
-    // 1. Link rút gọn hoặc link chứa /video/ hoặc /photo/ -> Tải Video
     if (/\/(video|photo|v)\//i.test(s) || /(vm|vt)\.tiktok\.com/i.test(s) || /douyin\.com/i.test(s)) {
       return { type: "video", value: s };
     }
 
-    // 2. Link profile dạng tiktok.com/@username -> Check Info User
     var mProfile = s.match(/tiktok\.com\/@([a-zA-Z0-9._-]+)/i);
     if (mProfile) {
       return { type: "user", value: mProfile[1] };
     }
 
-    // 3. Các link tiktok khác chưa rõ dạng -> Mặc định thử tải Video
     if (/tiktok\.com/i.test(s)) {
       return { type: "video", value: s };
     }
 
-    // 4. Nhập @username hoặc username trực tiếp -> Check Info User
     var cleanUser = s.replace(/^@/, "");
     if (/^[a-zA-Z0-9._-]{2,50}$/.test(cleanUser)) {
       return { type: "user", value: cleanUser };
@@ -93,46 +89,22 @@
   function fetchUserInfo(username) {
     var clean = String(username).replace(/^@/, "").trim();
     var targetUrl = USER_API + encodeURIComponent(clean);
+    var proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
 
-    // Tự động thử gọi trực tiếp trước, nếu vướng CORS trên host x10.mx thì tự chuyển qua CORS Proxy
-    var urlsToTry = [
-      targetUrl,
-      "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl),
-      "https://corsproxy.io/?" + encodeURIComponent(targetUrl)
-    ];
-
-    var i = 0;
-    function attempt() {
-      if (i >= urlsToTry.length) {
-        return Promise.reject(new Error("Không kết nối được API check info (Lỗi mạng hoặc CORS)"));
-      }
-      var currentUrl = urlsToTry[i++];
-      return fetch(currentUrl)
-        .then(function (r) {
-          if (!r.ok) throw new Error("HTTP " + r.status);
-          return r.text();
-        })
-        .then(function (text) {
-          var json;
-          try {
-            json = JSON.parse(text);
-          } catch (err) {
-            throw new Error("Phản hồi từ API không phải JSON hợp lệ");
-          }
-          if (!json || json.error || json.status === "error" || json.code === -1) {
-            throw new Error(json.message || json.msg || json.error || "Không tìm thấy người dùng này");
-          }
-          return normalizeUserData(json, clean);
-        })
-        .catch(function (e) {
-          if (i >= urlsToTry.length) throw e;
-          return attempt();
-        });
-    }
-    return attempt();
+    return fetch(proxyUrl)
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (json) {
+        if (!json || json.error || json.status === "error" || json.code === -1) {
+          throw new Error(json.message || json.msg || json.error || "Không tìm thấy người dùng này");
+        }
+        return normalizeUserData(json, clean);
+      });
   }
 
-  /* Chuẩn hóa dữ liệu JSON từ tik1.php (hỗ trợ mọi cấu trúc trả về phổ biến) */
+  /* Chuẩn hóa dữ liệu JSON */
   function normalizeUserData(raw, fallbackUser) {
     var d = raw.data || raw.user_info || raw.result || raw;
     var u = d.user || d.author || d;
@@ -154,18 +126,11 @@
     var verified = Boolean(pick(u, ["verified", "is_verified"], false));
     var privateAcc = Boolean(pick(u, ["privateAccount", "is_private", "secret"], false));
     var region = pick(u, ["region", "country", "language", "location"], "");
-    var createTime = pick(u, ["createTime", "create_time", "created_at", "reg_time"], "");
 
     var followers = pick(st, ["followerCount", "follower_count", "followers", "fans", "sub_count"], 0);
     var following = pick(st, ["followingCount", "following_count", "following", "followings"], 0);
     var hearts = pick(st, ["heartCount", "heart", "heart_count", "total_favorited", "likes", "digg_count"], 0);
     var videos = pick(st, ["videoCount", "video_count", "videos", "aweme_count"], 0);
-
-    // Đổi timestamp sang ngày tháng nếu createTime là số
-    if (createTime && /^\d{9,10}$/.test(String(createTime))) {
-      var dt = new Date(Number(createTime) * 1000);
-      createTime = dt.toLocaleDateString("vi-VN");
-    }
 
     return {
       uniqueId: uniqueId,
@@ -176,7 +141,6 @@
       verified: verified,
       privateAcc: privateAcc,
       region: region,
-      createTime: createTime,
       followers: followers,
       following: following,
       hearts: hearts,
@@ -319,7 +283,7 @@
     out.appendChild(d);
   }
 
-  /* Render Thẻ Thông Tin User (từ API tik1.php) */
+  /* Render Thẻ Thông Tin User */
   function renderUser(u, targetCard) {
     var card = document.createElement("div");
     card.className = "vcard ucard";
@@ -330,8 +294,7 @@
 
     var metaHtml = [];
     if (u.uid) metaHtml.push("<b>UID:</b> " + esc(u.uid));
-    if (u.region) metaHtml.push("<b>Quốc gia:</b> " + esc(u.region));
-    if (u.createTime) metaHtml.push("<b>Ngày tạo:</b> " + esc(u.createTime));
+    if (u.region) metaHtml.push("<b>Khu vực:</b> " + esc(u.region));
 
     card.innerHTML =
       '<div class="shot">' +
@@ -494,7 +457,6 @@
       dls.appendChild(c);
     }
 
-    // Nút Check Info chủ kênh ngay trên thẻ video
     if (nick) {
       var btnInfo = document.createElement("button");
       btnInfo.type = "button";
