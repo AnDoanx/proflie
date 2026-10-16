@@ -1,0 +1,428 @@
+<!--
+⣿⠛⠛⠛⠛⠻⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠛⢛⣿⠋⢀⡾⠃⠀⠀⠀⠀⢀⣤⣤⠤⠤⣤⣤⣀⣀⣀⣠⠶⡶⣤⣀⣠⠾⡷⣦⣀⣤⣤⡤⠤⠦⢤⣤⣄⡀⠀⢠⡶⢶⡄⠀⠀
+⢠⡟⠁⣴⣿⢤⡄⣴⢶⠶⡆⠈⢷⡀⠀⠀⠀⠀⢀⣭⣫⠵⠥⠽⣄⣝⠵⢍⣘⣄⠳⣤⣀⠀⠀⢀⡤⠊⣽⠁⠀⠸⣇⠀⢿⠀⠀
+⠸⢷⣴⣤⡤⠾⠇⣽⠋⠼⣷⠀⠈⢷⡄⢀⣤⡶⠋⠀⣀⡄⠤⠀⡲⡆⠀⠀⠈⠙⡄⠘⢮⢳⡴⠯⣀⢠⡏⠀⠀⠀⢻⠀⢸⠇⠀
+⠀⠀⠀⠀⠀⠀⠀⠙⠛⠋⠉⢀⣴⠟⠉⢯⡞⡠⢲⠉⣼⠀⠀⡰⠁⡇⢀⢷⠀⣄⢵⠀⠈⡟⢄⠀⠀⠙⢷⣤⣤⣤⡿⢢⡿⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠟⠑⠊⠁⡼⣌⢠⢿⢸⢸⡀⢰⠁⡸⡇⡸⣸⢰⢈⠘⡄⠀⢸⠀⢣⡀⠀⠈⢮⢢⣏⣤⡾⠃⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⣯⣴⠞⡠⣼⠁⡘⣾⠏⣿⢇⣳⣸⣞⣀⢱⣧⣋⣞⡜⢳⡇⠀⢸⠀⢆⢧⠀⠰⣄⢏⢧⣾⠁⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢹⡏⢰⠁⡻⠀⡟⡏⠉⠀⣀⠀⠀⠀⠀⣀⠁⠀⠉⠛⢽⠇⠀⣼⡆⠈⡆⠃⠀⡏⠻⣾⣽⣇⡀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠁⡇⠀⡇⡄⣿⠷⠿⠿⠛⠀⠀⠀⠀⠛⠻⠿⠿⠿⡜⢀⡴⡟⢸⣸⡼⠀⠀⡇⠀⡞⡆⢻⠙⢦⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡶⢀⣼⣿⣬⣽⠧⠬⠇⠀⠀⠀⠀⠀⠀⢞⣯⣭⢺⣔⣪⣾⣤⠺⡇⢳⠀⢠⣧⡾⠛⠛⠻⠶⠞⠁
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠷⢿⠟⠉⡀⠈⢦⡀⠀⠀⣠⠖⠒⠒⢤⡀⠀⢀⡼⠿⢇⡣⢬⣶⠷⢿⣤⡾⠁⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⠷⠾⠷⠖⠛⠛⠲⠶⠿⠤⣤⠤⠤⢷⣶⠋⠀⠀⠀⣱⠞⠁⠀⠈⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠉⠛⠓⠒⠚⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+Hello, I'm Mizu! Welcome to my personal website :3
+--><!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="mizu.pages.dev | mizu.is-a.dev" />
+    <meta name="author" content="MiyagawaMizu" />
+    <meta name="keywords" content="miyagawamizu,mizu,mizumiyagawa,miyagawa,miyagawa mizu" />
+    <meta property="og:site_name" content="@MiyagawaMizu" />
+    <meta property="og:image" content="https://miyagawamizu.github.io/src/assets/images/profile/thumbnail.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#ffceaa" />
+    <meta name="p:domain_verify" content="9a7845e14140e69e8703f272ae97ce28" />
+    <link rel="canonical" href="https://miyagawamizu.github.io/" />
+    <link rel="icon" href="./favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      href="https://fonts.googleapis.com/css2?family=Playpen+Sans&family=Great+Vibes&family=Passion+One&family=Poetsen+One&display=swap"
+      as="style"
+      onload="this.rel = 'stylesheet'"
+    />
+    <noscript
+      ><link
+        href="https://fonts.googleapis.com/css2?family=Playpen+Sans&family=Great+Vibes&family=Passion+One&family=Poetsen+One&display=swap"
+        rel="stylesheet"
+    /></noscript>
+    <link rel="preload" href="./src/assets/fonts/Minecraft.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" as="image" type="image/avif" href="./src/assets/images/backgrounds/" fetchpriority="high" />
+    <link rel="stylesheet" href="./css/style.css" />
+    <noscript><link rel="stylesheet" href="./css/style.css" /></noscript>
+    <title>MiyagawaMizu</title>
+  </head>
+  <body oncontextmenu="return !0;">
+    <button id="scroll-to-bento" aria-label="Scroll to bento section">
+      <svg
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="48"
+        fill="none"
+        viewBox="0 0 512 512"
+      >
+        <path d="M112 184l144 144 144-144"></path>
+      </svg>
+    </button>
+    <div class="container">
+      <header id="profile">
+        <div class="about-me" id="about-me">
+          <div class="avatar-box bubble-trigger">
+            <img
+              title="Artist: Edgar, pixiv: 5833213"
+              class="big-avatar"
+              src="./src/assets/images/profile/av.gif"
+              alt="Avatar"
+            /><img
+              style="visibility: visible"
+              src="./src/assets/images/decor/heart.png"
+              class="avatar-pendant"
+              alt="avatar decor"
+              fetchpriority="high"
+            />
+            <div class="hairclip item mctooltip" style="display: none">
+              <div class="tooltip" style="display: none">
+                <span>Carved Pumpkin</span><br /><span style="color: #ff6062; text-shadow: 0.11em 0.11em #002900"
+                  >Curse of Binding</span
+                ><br /><span style="color: #545454; text-shadow: 0.11em 0.11em #151515">minecraft:carved_pumpkin</span>
+              </div>
+            </div>
+            <div class="dot-box">
+              <div class="status-discord">
+                <div class="empty"></div>
+                <p>Offline</p>
+              </div>
+              <span class="ping"></span><span class="dot"></span>
+            </div>
+            <div class="position">
+              <div class="bubble"></div>
+              <div class="status-bubble">
+                <span class="pin icon-1" title="Cake"></span><span class="status-content" alt="text-content"></span
+                ><span class="pin icon-2" title="Sweet Berries"></span>
+              </div>
+            </div>
+          </div>
+          <div class="mememe">
+            <div class="username">
+              <h1 translate="no" class="name"><code>.Mizu</code></h1>
+              <div class="poppy item mctooltip" style="border-image: url(src/public/ui/tooltip-border.png) 30% repeat">
+                <div class="tooltip" style="display: none">
+                  <span style="color: #f3f05d; font-style: italic">my love for you &lt;3</span><br /><span
+                    style="color: #a8a8a8; text-shadow: 0.11em 0.11em #292929"
+                    >Mending</span
+                  ><br /><span style="color: #ff6062; text-shadow: 0.11em 0.11em #002900">Curse of Binding</span
+                  ><br /><span style="color: #a8a8a8; text-shadow: 0.11em 0.11em #002900">Protection X</span><br /><span
+                    style="color: #a8a8a8; text-shadow: 0.11em 0.11em #002900"
+                    >Unreaking X</span
+                  ><br /><span style="color: #545454; text-shadow: 0.11em 0.11em #151515">minecraft:red_flower</span>
+                </div>
+              </div>
+            </div>
+            <div class="line" id="l1">I'm <strong>Mizu</strong>, a Gamer, Biker who loves anime and manga :3</div>
+            <div class="line" id="l2">
+              I currently reside and work in Vietnam. I can speak a little English and Chinese, my main language is
+              Vietnamese 🍜
+            </div>
+            <div class="line" id="l2">
+              Thank you for reading! Here is a cookie for you :3~
+              <div class="cookie item mctooltip" id="eat">
+                <div class="tooltip" style="display: none"><span>Cookie</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+      <main class="wrapper" id="wrapper">
+        <div class="bento" id="bento">
+          <a href="#wrapper" class="widget widget-clock"
+            ><div class="vignette"></div>
+            <div class="clock-container">
+              <span id="time" class="time"></span><span id="day" class="day"></span><span id="date" class="date"></span>
+            </div>
+            <p>UTC+7</p></a
+          >
+          <div class="widget widget-display" id="img1">
+            <img class="img" src="./src/assets/images/backgrounds/img_1.gif" alt="art" />
+            <p>🍰</p>
+          </div>
+          <a class="widget widget-social" href="https://www.youtube.com/@miyagawamizu" rel="noopener" target="_blank"
+            ><div class="meta-container">
+              <div class="icon">
+                <img src="./src/assets/images/icons/youtube.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>YouTube</b>
+                <p>@miyagawamizu</p>
+              </div>
+              <div style="background-color: #eb0404; border-radius: 30px" class="follow">Subscribe</div>
+            </div></a
+          ><a class="widget widget-social" href="https://www.tiktok.com/@miyagawamizu" rel="noopener" target="_blank"
+            ><div class="meta-container">
+              <div class="icon">
+                <img src="./src/assets/images/icons/tiktok.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>TikTok</b>
+                <p>@miyagawamizu</p>
+              </div>
+              <div style="background-color: #ea435a; border-radius: 5px" class="follow">Follow</div>
+            </div></a
+          ><a class="widget widget-social" href="http://fb.com/MiyagawaMizu" rel="noreferrer noopener" target="_blank"
+            ><div class="meta-container">
+              <div class="icon" style="background-color: #fff">
+                <img src="./src/assets/images/social/Facebook.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>Facebook</b>
+                <p>Hà Thủy</p>
+              </div>
+              <div style="background-color: #0866ff; border-radius: 5px" class="follow">Add Friend</div>
+            </div></a
+          ><a
+            class="widget widget-social"
+            href="https://open.spotify.com/user/z8vtap612j1ajql4wsyhl074i"
+            rel="noopener"
+            target="_blank"
+            ><div class="meta-container">
+              <div class="icon" style="background-color: #fff">
+                <img src="./src/assets/images/social/Spotify.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>Spotify</b>
+                <p>MiyagawaMizu</p>
+              </div>
+              <div
+                style="background-color: #f6f8fa; border-radius: 30px; color: #24292f; outline: 1px solid #33333336"
+                class="follow"
+              >
+                Listening with me
+              </div>
+            </div></a
+          >
+          <div class="widget widget-display" id="img2">
+            <img class="img" src="./src/assets/images/backgrounds/img_2.gif" alt="art" />
+            <p>🍨</p>
+          </div>
+          <a class="widget widget-social" href="https://discord.gg/sGxn3uEmUn" rel="noopener" target="_blank"
+            ><div class="meta-container">
+              <div class="icon">
+                <img src="./src/assets/images/icons/discord.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>Discord</b>
+                <p class="server-name">N.E.E.T <span>CORPORATION</span></p>
+              </div>
+              <div style="background-color: #5865f2; border-radius: 5px" class="follow">Join Server</div>
+            </div></a
+          ><a class="widget widget-social" href="./setup" rel="noreferrer noopener" target="_blank"
+            ><div class="meta-container">
+              <div class="icon" style="background-color: #fff">
+                <img src="./src/gamepad.svg" alt="logo" style="height: 30px; width: 30px" />
+              </div>
+              <div class="meta">
+                <b>Gear</b>
+                <p>Mizu's Setup</p>
+                <div style="background-color: #ff5277; border-radius: 5px" class="follow">View Collection</div>
+              </div>
+            </div></a
+          ><a
+            class="widget widget-social"
+            href="http://steamcommunity.com/id/MiyagawaMizu"
+            rel="noopener"
+            target="_blank"
+            ><div class="meta-container">
+              <div class="icon" style="background-color: #fff">
+                <img src="./src/assets/images/social/Steam.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>Steam</b>
+                <p>Mizu</p>
+              </div>
+              <div
+                style="background-color: #f6f8fa; border-radius: 5px; color: #24292f; outline: 1px solid #33333336"
+                class="follow"
+              >
+                Add Friend
+              </div>
+            </div></a
+          ><a
+            class="widget widget-social"
+            href="https://github.com/MiyagawaMizu"
+            rel="noreferrer noopener"
+            target="_blank"
+            ><div class="meta-container">
+              <div class="icon">
+                <img src="./src/assets/images/icons/github.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>Github</b>
+                <p>miyagawamizu</p>
+              </div>
+              <div
+                style="background-color: #f6f8fa; border-radius: 5px; color: #24292f; outline: 1px solid #33333336"
+                class="follow"
+              >
+                Follow
+              </div>
+            </div></a
+          ><a class="widget widget-social discord-rpc"
+            ><div class="discord">
+              <div class="content">
+                <div class="icon" style="--size: 100%">
+                  <svg width="40" height="40" viewBox="0 0 40 40">
+                    <defs>
+                      <mask id="mask-avatar" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                        <rect fill="white" x="0" y="0" width="100%" height="100%"></rect>
+                        <circle fill="black" cx="0.855" cy="0.855" r="0.2"></circle>
+                      </mask>
+                    </defs>
+                    <foreignObject width="40" height="40" mask="url(#mask-avatar)"
+                      ><div class="avatar"></div
+                    ></foreignObject>
+                  </svg>
+                  <div class="color-dot"></div>
+                </div>
+                <div class="meta">
+                  <div class="display-name bold overflow"></div>
+                  <div class="opaque overflow"><span class="status"></span><span class="activity bold"></span></div>
+                </div>
+              </div>
+              <div class="rpc">
+                <div class="image-container">
+                  <svg width="72" height="72" viewBox="0 0 72 72">
+                    <defs>
+                      <mask id="mask-large-image" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
+                        <rect fill="white" x="0" y="0" width="100%" height="100%"></rect>
+                        <circle fill="black" cx="0.86" cy="0.86" r="0.25"></circle>
+                      </mask>
+                    </defs>
+                    <foreignObject width="72" height="72" mask="url(#mask-large-image)"
+                      ><div class="large-image"></div
+                    ></foreignObject>
+                  </svg>
+                  <div class="small-image"></div>
+                </div>
+                <div class="meta opaque">
+                  <div class="details overflow"></div>
+                  <div class="state overflow"></div>
+                  <div class="timestamp overflow"></div>
+                  <div class="timebar-container" style="display: none">
+                    <div class="current-time"></div>
+                    <div class="timebar-background"><div class="timebar-progress"></div></div>
+                    <div class="total-time"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="free" style="display: none">I'm not currently doing anything 🍵</div></a
+          ><a class="widget widget-social" id="mail" href="mailto:mizuneenee@gmail.com" rel="noopener" target="_blank"
+            ><div class="meta-container">
+              <div class="icon" style="background-color: #fff">
+                <img src="./src/assets/images/social/gmail.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>Email</b>
+                <p>mizuneenee@gmail.com</p>
+              </div>
+              <img
+                src="./src/assets/images/profile/thumbnail_gear.jpg"
+                alt="art"
+                id="img-widget"
+                class="sticker"
+              /></div></a
+          ><a
+            class="widget widget-social"
+            id="dysphoria"
+            href="https://www.tiktok.com/@mizukawasaki"
+            rel="noopener"
+            target="_blank"
+            ><div class="meta-container">
+              <div class="icon">
+                <img src="./src/assets/images/icons/tiktok.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>TikTok</b>
+                <p>@mizukawasaki<br /><i>About Sportbike</i></p>
+              </div>
+              <img
+                src="./src/assets/images/backgrounds/kawasaki-ninja-400-edit.avif"
+                id="img-widget"
+                alt="art"
+                class="sticker"
+              /></div></a
+          ><a class="widget widget-social" id="insta" href="https://nekoweb.org/explore" rel="noopener" target="_blank"
+            ><div class="meta-container">
+              <div class="icon"><img src="./src/assets/images/icons/meow.png" alt="logo" width="40" height="40" /></div>
+              <div class="meta">
+                <b>nekoweb.org</b>
+                <p>Indie Web</p>
+              </div>
+              <div style="background-color: #694f57; border-radius: 0.5rem" class="follow">Visit</div>
+            </div></a
+          ><a
+            class="widget widget-social"
+            href="https://neocities.org/browse"
+            id="wallhack"
+            rel="noopener"
+            target="_blank"
+            ><div class="meta-container">
+              <div class="icon">
+                <img src="./src/assets/images/icons/Neocities_Logo.svg" alt="logo" width="40" height="40" />
+              </div>
+              <div class="meta">
+                <b>neocities.org</b>
+                <p>Indie Web</p>
+              </div>
+              <div style="background-color: #5e95a1; border-radius: 30px" class="follow">Visit</div>
+            </div></a
+          >
+          <footer class="widget">
+            <div class="footer-box">
+              <div class="footer-tile">
+                <p><em>“Love me~♡ Love you~♡ It's Loves Only You~♡” ―Loves Only You</em></p>
+              </div>
+            </div>
+          </footer>
+        </div>
+      </main>
+    </div>
+    <button style="visibility: visible" aria-label="Back to top" id="back-to-top"></button
+    ><a
+      rel="noopener"
+      target="_blank"
+      class="setting"
+      id="setting"
+      title="Stop coping me meow!"
+      style="--image: url(../src/public/item/pink-petals.png)"
+    ></a>
+    <script async src="./scripts/clock.js"></script>
+    <script defer="defer" src="./scripts/script.js"></script>
+    <script defer="defer" src="./scripts/lanyard.js"></script>
+    <script defer="defer" src="./scripts/plushie.js"></script>
+    <div style="display: none" class="back-to-top"></div>
+  </body>
+  <div id="setting-panel" class="setting-modal">
+    <div class="setting-header">
+      <h2><i class="fa-solid fa-gear"></i>Dashboard</h2>
+      <button id="close-setting-btn">×</button>
+    </div>
+    <div id="auth-section" class="setting-content">
+      <div class="form-group-auth">
+        <label>Type Password:</label><input type="password" id="auth-password-input" placeholder="Password" /><button
+          id="auth-submit-btn"
+          class="primary-btn"
+        >
+          Access
+        </button>
+        <div id="auth-msg"></div>
+      </div>
+    </div>
+    <div id="main-setting-section" class="setting-content" style="display: none">
+      <div class="form-group">
+        <label>Status Text:</label><input type="text" id="set-status-text" placeholder="I'm..." />
+      </div>
+      <div class="form-group">
+        <label>Link image/gif:</label><input type="text" id="set-status-img" placeholder="https://..." />
+      </div>
+      <button id="update-worker-btn" class="primary-btn">Update Status</button>
+      <div id="update-msg"></div>
+    </div>
+  </div>
+  <div id="modal-overlay"></div>
+</html>

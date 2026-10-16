@@ -1,0 +1,10 @@
+{
+  "name": "mizu-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Editable static copy of mizu.pages.dev",
+  "scripts": {
+    "start": "python3 serve.py",
+    "serve": "python3 serve.py"
+  }
+}
