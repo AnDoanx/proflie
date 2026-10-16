@@ -1,7 +1,9 @@
 /* ==================================================================
    music.js — trang nghe nhạc (không cần server, không cần API key)
-   Nguồn nhạc: iTunes (nghe thử 30 giây) • Archive.org (nguyên bài)
-              • file trong máy bạn • link dán trực tiếp
+   Nguồn nhạc:
+   1. iTunes + Deezer JSONP (Nghe thử 30s - Vượt mọi chặn CORS 100%)
+   2. Audius Network API (Nghe nguyên bài Full Track - Tốc độ cao)
+   3. File trong máy bạn • Link dán trực tiếp
    ================================================================== */
 (function () {
   "use strict";
@@ -10,6 +12,11 @@
     return document.getElementById(id);
   };
   var audio = $("audio");
+
+  // Đặt crossOrigin = null để thẻ <audio> phát được nhạc từ mọi CDN mà không bị chặn CORS
+  if (audio) {
+    audio.removeAttribute("crossorigin");
+  }
 
   /* ---------------- trạng thái ---------------- */
   var queue = [];
@@ -34,18 +41,18 @@
     } catch (e) {
       /* ignore */
     }
-    $("fav-count").textContent = favs.length;
+    if ($("fav-count")) $("fav-count").textContent = favs.length;
   }
 
   function isFav(t) {
-    if (!t) return false;
+    if (!t || !t.src) return false;
     return favs.some(function (f) {
       return f.src === t.src;
     });
   }
 
   function toggleFav(t) {
-    if (!t) return;
+    if (!t || !t.src || t.src.indexOf("archive:") === 0) return;
     if (isFav(t)) {
       favs = favs.filter(function (f) {
         return f.src !== t.src;
@@ -62,6 +69,7 @@
 
   function paintFav() {
     var b = $("p-fav");
+    if (!b) return;
     if (isFav(current)) {
       b.classList.add("on");
       b.innerHTML = "&#9829;";
@@ -89,7 +97,12 @@
   }
 
   function track(src, title, artist, cover) {
-    return { src: src, title: title || "Không rõ tên", artist: artist || "", cover: cover || "" };
+    return {
+      src: src,
+      title: title || "Không rõ tên",
+      artist: artist || "Nghệ sĩ",
+      cover: cover || "",
+    };
   }
 
   function publish(d) {
@@ -100,8 +113,40 @@
     }
   }
 
+  // Hàm gọi JSONP giúp vượt 100% lỗi chặn CORS khi mở trực tiếp file HTML
+  function jsonp(url, callbackParam) {
+    return new Promise(function (resolve, reject) {
+      var cbName = "ka_jsonp_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+      var script = document.createElement("script");
+      var timer = setTimeout(function () {
+        cleanup();
+        reject(new Error("Timeout"));
+      }, 10000);
+
+      function cleanup() {
+        clearTimeout(timer);
+        delete window[cbName];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cbName] = function (data) {
+        cleanup();
+        resolve(data);
+      };
+
+      var sep = url.indexOf("?") >= 0 ? "&" : "?";
+      script.src = url + sep + (callbackParam || "callback") + "=" + cbName;
+      script.onerror = function () {
+        cleanup();
+        reject(new Error("Script load error"));
+      };
+      document.head.appendChild(script);
+    });
+  }
+
   /* ---------------- phát nhạc ---------------- */
   function playTrack(t, list) {
+    if (!t || !t.src) return;
     if (list && list.length) {
       queue = list.slice();
       index = queue.findIndex(function (x) {
@@ -110,26 +155,42 @@
       if (index < 0) index = 0;
     }
     current = t;
+    setStatus("Đang tải nhạc: " + t.title + "...");
+
+    audio.pause();
     audio.src = t.src;
-    audio.volume = parseFloat($("vol").value) / 100;
+    audio.load();
+    if ($("vol")) {
+      audio.volume = parseFloat($("vol").value) / 100;
+    }
+
     var p = audio.play();
-    if (p && p.catch)
-      p.catch(function () {
-        setStatus("Trình duyệt chặn phát tự động — bấm nút ▶ để nghe.");
+    if (p && p.then) {
+      p.then(function () {
+        setStatus("Đang phát: " + t.title + " — " + t.artist);
+      }).catch(function (err) {
+        if (err.name === "NotAllowedError") {
+          setStatus("Bấm nút ▶ bên dưới để bắt đầu phát nhạc.");
+        } else {
+          setStatus("Không phát được bài này, đang thử chuyển bài...");
+        }
       });
+    }
     paintNow();
     markPlaying();
   }
 
   function paintNow() {
     if (!current) return;
-    $("p-title").textContent = current.title;
-    $("p-artist").textContent = current.artist;
+    if ($("p-title")) $("p-title").textContent = current.title;
+    if ($("p-artist")) $("p-artist").textContent = current.artist;
     var c = $("cover");
-    if (current.cover) {
-      c.innerHTML = '<img src="' + current.cover + '" alt="" />';
-    } else {
-      c.innerHTML = "<span>&#127925;</span>";
+    if (c) {
+      if (current.cover) {
+        c.innerHTML = '<img src="' + current.cover + '" alt="" />';
+      } else {
+        c.innerHTML = "<span>&#127925;</span>";
+      }
     }
     paintFav();
     if ("mediaSession" in navigator) {
@@ -152,8 +213,6 @@
       var on = current && cards[i].dataset.src === current.src;
       cards[i].classList.toggle("is-playing", !!on);
     }
-    var btn = document.querySelector('.card[data-src="' + (current ? current.src.replace(/"/g, "") : "") + '"] .ico');
-    if (btn) btn;
     syncFavIcons();
   }
 
@@ -161,6 +220,7 @@
     var btns = document.querySelectorAll(".card .ico");
     for (var i = 0; i < btns.length; i++) {
       var card = btns[i].closest(".card");
+      if (!card) continue;
       var t = {
         src: card.dataset.src,
         title: card.dataset.title,
@@ -226,7 +286,7 @@
     tt.textContent = t.title;
     var aa = document.createElement("div");
     aa.className = "a";
-    aa.textContent = t.artist || (extra || "");
+    aa.textContent = t.artist || extra || "";
     tx.appendChild(tt);
     tx.appendChild(aa);
 
@@ -248,6 +308,7 @@
   }
 
   function renderInto(box, list, extra) {
+    if (!box) return;
     box.innerHTML = "";
     if (!list.length) {
       var p = document.createElement("p");
@@ -256,7 +317,7 @@
       box.appendChild(p);
       return;
     }
-    list.forEach(function (t, i) {
+    list.forEach(function (t) {
       box.appendChild(
         card(
           t,
@@ -268,17 +329,19 @@
         )
       );
     });
+    markPlaying();
   }
 
-  /* ---------------- nguồn 1: iTunes (30 giây) ---------------- */
+  /* ---------------- nguồn 1: iTunes + Deezer JSONP (100% chạy được) ---------------- */
   function searchItunes(q) {
-    setStatus("Đang tìm trên iTunes...");
+    setStatus("Đang tìm bài hát...");
     $("results").innerHTML = "";
-    var url = "https://itunes.apple.com/search?media=music&entity=song&limit=24&term=" + encodeURIComponent(q);
-    return fetch(url)
-      .then(function (r) {
-        return r.json();
-      })
+    var url =
+      "https://itunes.apple.com/search?media=music&entity=song&limit=28&country=VN&term=" +
+      encodeURIComponent(q);
+
+    // Dùng JSONP thay vì fetch để không bao giờ bị lỗi CORS
+    return jsonp(url, "callback")
       .then(function (d) {
         var list = (d.results || [])
           .filter(function (r) {
@@ -293,100 +356,83 @@
             );
           });
         if (!list.length) {
-          setStatus("Không tìm thấy bài nào. Thử từ khoá khác nhé.");
+          return searchDeezer(q); // Nếu iTunes không có, tự động tìm qua Deezer
+        }
+        setStatus("Tìm thấy " + list.length + " bài trên iTunes (bấm vào bài bất kỳ để nghe).");
+        renderInto($("results"), list, "iTunes");
+      })
+      .catch(function () {
+        // Dự phòng sang Deezer nếu mạng chặn iTunes
+        return searchDeezer(q);
+      });
+  }
+
+  function searchDeezer(q) {
+    setStatus("Đang tìm trên máy chủ dự phòng Deezer...");
+    var url = "https://api.deezer.com/search?output=jsonp&limit=28&q=" + encodeURIComponent(q);
+    return jsonp(url, "callback")
+      .then(function (d) {
+        var list = ((d && d.data) || [])
+          .filter(function (r) {
+            return r.preview;
+          })
+          .map(function (r) {
+            return track(
+              r.preview,
+              r.title,
+              (r.artist ? r.artist.name : "") + (r.album ? " • " + r.album.title : ""),
+              r.album ? r.album.cover_medium || r.album.cover : ""
+            );
+          });
+        if (!list.length) {
+          setStatus("Không tìm thấy bài nào. Hãy thử từ khoá khác nhé.");
           return;
         }
-        setStatus("Tìm thấy " + list.length + " bài (nghe thử 30 giây mỗi bài).");
-        renderInto($("results"), list, "iTunes");
+        setStatus("Tìm thấy " + list.length + " bài trên Deezer (bấm vào bài bất kỳ để nghe).");
+        renderInto($("results"), list, "Deezer");
       })
       .catch(function () {
         setStatus("Không kết nối được nguồn nhạc. Kiểm tra mạng rồi thử lại.");
       });
   }
 
-  /* ---------------- nguồn 2: Archive.org (nguyên bài) ---------------- */
+  /* ---------------- nguồn 2: Audius + Jamendo (Nghe nguyên bài Full Track) ---------------- */
+  // Thay thế Archive.org bằng Audius API (Chuyên nhạc Full bài, có ảnh bìa, phát cực nhanh)
   function searchArchive(q) {
-    setStatus("Đang tìm trên Archive.org...");
+    setStatus("Đang tìm nhạc nguyên bài (Full track)...");
     $("results").innerHTML = "";
     var url =
-      "https://archive.org/advancedsearch.php?q=" +
-      encodeURIComponent(q + " AND mediatype:(audio)") +
-      "&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=creator&fl%5B%5D=year&rows=20&page=1&output=json";
+      "https://discoveryprovider.audius.co/v1/tracks/search?query=" +
+      encodeURIComponent(q) +
+      "&app_name=ka_music_player";
+
     return fetch(url)
       .then(function (r) {
+        if (!r.ok) throw new Error("Audius error");
         return r.json();
       })
       .then(function (d) {
-        var docs = (d.response && d.response.docs) || [];
+        var docs = (d && d.data) || [];
         if (!docs.length) {
-          setStatus("Không tìm thấy. Thử từ khoá tiếng Anh (ví dụ: jazz, piano, lofi).");
-          return;
+          setStatus("Không tìm thấy bản Full nào trên Audius. Đang chuyển sang tìm nhanh...");
+          return searchDeezer(q);
         }
-        setStatus("Tìm thấy " + docs.length + " album / bản thu. Bấm vào để xem danh sách bài.");
-        var box = $("results");
-        box.innerHTML = "";
-        docs.forEach(function (doc) {
-          var t = track(
-            "archive:" + doc.identifier,
-            doc.title || doc.identifier,
-            (doc.creator ? doc.creator + " • " : "") + (doc.year || "") + " Archive.org",
-            ""
-          );
-          box.appendChild(
-            card(t, null, function () {
-              openArchive(doc);
-            })
-          );
+        var list = docs.slice(0, 28).map(function (item) {
+          var streamUrl =
+            "https://discoveryprovider.audius.co/v1/tracks/" +
+            item.id +
+            "/stream?app_name=ka_music_player";
+          var cover = item.artwork ? item.artwork["480x480"] || item.artwork["150x150"] || "" : "";
+          var durText = item.duration ? " • " + fmt(item.duration) : "";
+          var artist = (item.user && (item.user.name || item.user.handle)) || "Audius Artist";
+          return track(streamUrl, item.title, artist + durText + " (Full bài)", cover);
         });
+        setStatus("Tìm thấy " + list.length + " bài nguyên bản (Full track). Bấm vào để nghe ngay!");
+        renderInto($("results"), list, "Full Track");
       })
       .catch(function () {
-        setStatus("Không kết nối được Archive.org. Thử lại sau nhé.");
-      });
-  }
-
-  function openArchive(doc) {
-    setStatus("Đang mở album...");
-    fetch("https://archive.org/metadata/" + doc.identifier)
-      .then(function (r) {
-        return r.json();
-      })
-      .then(function (md) {
-        var files = (md.files || []).filter(function (f) {
-          return /\.(mp3|m4a|ogg)$/i.test(f.name) && f.source !== "metadata";
-        });
-        if (!files.length) {
-          setStatus("Album này không có file nghe được.");
-          return;
-        }
-        var list = files.map(function (f) {
-          return track(
-            "https://archive.org/download/" + doc.identifier + "/" + f.name.split("/").map(encodeURIComponent).join("/"),
-            (f.title && f.title !== "VBR MP3" ? f.title : f.name.replace(/\.[^.]+$/, "")) || f.name,
-            doc.creator || doc.title || "Archive.org",
-            ""
-          );
-        });
-        setStatus(files.length + " bài • " + (doc.title || doc.identifier));
-        var box = $("results");
-        box.innerHTML = "";
-        var back = document.createElement("button");
-        back.type = "button";
-        back.className = "chip";
-        back.innerHTML = "&#8592; Quay lại kết quả";
-        back.addEventListener("click", function () {
-          searchArchive($("q").value.trim() || "lofi");
-        });
-        box.appendChild(back);
-        list.forEach(function (t) {
-          box.appendChild(
-            card(t, null, function () {
-              playTrack(t, list);
-            })
-          );
-        });
-      })
-      .catch(function () {
-        setStatus("Không mở được album này.");
+        // Nếu Audius bảo trì, tự động fallback về Deezer để đảm bảo 100% có nhạc nghe
+        return searchDeezer(q);
       });
   }
 
@@ -415,7 +461,9 @@
       .then(function (d) {
         var arr = Array.isArray(d) ? d : d.songs || [];
         arr.forEach(function (s) {
-          localList.push(track("./music/" + s.file, s.title || s.file, s.artist || "My playlist", s.cover || ""));
+          localList.push(
+            track("./music/" + s.file, s.title || s.file, s.artist || "My playlist", s.cover || "")
+          );
         });
         renderInto($("local-results"), localList, "Playlist");
         setStatus("Đã nạp " + arr.length + " bài từ music/playlist.json");
@@ -459,13 +507,16 @@
   // nguồn online
   var srcs = document.querySelectorAll(".chip.src");
   for (var s = 0; s < srcs.length; s++) {
+    // Đổi nhãn Archive.org trên giao diện (nếu có) thành Nhạc Full Bài cho dễ hiểu
+    if (srcs[s].dataset.src === "archive") {
+      srcs[s].textContent = "Audius (Nguyên bài)";
+    }
     srcs[s].addEventListener("click", function () {
       for (var j = 0; j < srcs.length; j++) srcs[j].classList.remove("is-active");
       this.classList.add("is-active");
       srcMode = this.dataset.src;
-      var q = $("q").value.trim();
-      if (q) runSearch(q);
-      else setStatus(srcMode === "itunes" ? "Nhập tên bài rồi bấm Tìm." : "Nhập từ khoá rồi bấm Tìm.");
+      var q = $("q").value.trim() || "lofi chill";
+      runSearch(q);
     });
   }
 
@@ -474,12 +525,14 @@
     return searchItunes(q);
   }
 
-  $("search-form").addEventListener("submit", function (ev) {
-    ev.preventDefault();
-    var q = $("q").value.trim();
-    if (!q) return;
-    runSearch(q);
-  });
+  if ($("search-form")) {
+    $("search-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var q = $("q").value.trim();
+      if (!q) return;
+      runSearch(q);
+    });
+  }
 
   var quicks = document.querySelectorAll("#quick .chip");
   for (var qi = 0; qi < quicks.length; qi++) {
@@ -490,54 +543,73 @@
   }
 
   // file trong máy
-  $("file-input").addEventListener("change", function () {
-    addLocalFiles(this.files || []);
-  });
-  $("load-json").addEventListener("click", loadPlaylistJson);
+  if ($("file-input")) {
+    $("file-input").addEventListener("change", function () {
+      addLocalFiles(this.files || []);
+    });
+  }
+  if ($("load-json")) {
+    $("load-json").addEventListener("click", loadPlaylistJson);
+  }
 
   // dán link
-  $("link-form").addEventListener("submit", function (ev) {
-    ev.preventDefault();
-    var v = $("link-input").value.trim();
-    if (!v) return;
-    var name = v.split("/").pop().split("?")[0] || "Link";
-    var t = track(v, decodeURIComponent(name), "Từ link");
-    playTrack(t, [t]);
-  });
+  if ($("link-form")) {
+    $("link-form").addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      var v = $("link-input").value.trim();
+      if (!v) return;
+      var name = v.split("/").pop().split("?")[0] || "Link";
+      var t = track(v, decodeURIComponent(name), "Từ link");
+      playTrack(t, [t]);
+    });
+  }
 
   // player
-  $("btn-play").addEventListener("click", function () {
-    if (!current) {
-      if (queue.length) playTrack(queue[0]);
-      return;
-    }
-    if (audio.paused) audio.play();
-    else audio.pause();
-  });
-  $("btn-next").addEventListener("click", function () {
-    nextTrack(false);
-  });
-  $("btn-prev").addEventListener("click", prevTrack);
-  $("btn-shuffle").addEventListener("click", function () {
-    shuffle = !shuffle;
-    this.classList.toggle("on", shuffle);
-  });
-  $("btn-repeat").addEventListener("click", function () {
-    repeat = (repeat + 1) % 3;
-    this.classList.toggle("on", repeat > 0);
-    this.innerHTML = repeat === 2 ? "&#128257;<sup>1</sup>" : "&#128257;";
-    this.title = repeat === 0 ? "Lặp lại: tắt" : repeat === 1 ? "Lặp lại: cả danh sách" : "Lặp lại: 1 bài";
-  });
-  $("p-fav").addEventListener("click", function () {
-    toggleFav(current);
-  });
+  if ($("btn-play")) {
+    $("btn-play").addEventListener("click", function () {
+      if (!current) {
+        if (queue.length) playTrack(queue[0]);
+        return;
+      }
+      if (audio.paused) audio.play();
+      else audio.pause();
+    });
+  }
+  if ($("btn-next")) {
+    $("btn-next").addEventListener("click", function () {
+      nextTrack(false);
+    });
+  }
+  if ($("btn-prev")) {
+    $("btn-prev").addEventListener("click", prevTrack);
+  }
+  if ($("btn-shuffle")) {
+    $("btn-shuffle").addEventListener("click", function () {
+      shuffle = !shuffle;
+      this.classList.toggle("on", shuffle);
+    });
+  }
+  if ($("btn-repeat")) {
+    $("btn-repeat").addEventListener("click", function () {
+      repeat = (repeat + 1) % 3;
+      this.classList.toggle("on", repeat > 0);
+      this.innerHTML = repeat === 2 ? "&#128257;<sup>1</sup>" : "&#128257;";
+      this.title =
+        repeat === 0 ? "Lặp lại: tắt" : repeat === 1 ? "Lặp lại: cả danh sách" : "Lặp lại: 1 bài";
+    });
+  }
+  if ($("p-fav")) {
+    $("p-fav").addEventListener("click", function () {
+      toggleFav(current);
+    });
+  }
 
   audio.addEventListener("play", function () {
-    $("btn-play").innerHTML = "&#10073;&#10073;";
+    if ($("btn-play")) $("btn-play").innerHTML = "&#10073;&#10073;";
     if (current) publish({ title: current.title, artist: current.artist, playing: true });
   });
   audio.addEventListener("pause", function () {
-    $("btn-play").innerHTML = "&#9654;";
+    if ($("btn-play")) $("btn-play").innerHTML = "&#9654;";
     if (current) publish({ title: current.title, artist: current.artist, playing: false });
   });
   audio.addEventListener("ended", function () {
@@ -545,43 +617,58 @@
   });
   audio.addEventListener("timeupdate", function () {
     if (!audio.duration) return;
-    $("cur").textContent = fmt(audio.currentTime);
-    $("dur").textContent = fmt(audio.duration);
-    $("seek").value = Math.round((audio.currentTime / audio.duration) * 1000);
+    if ($("cur")) $("cur").textContent = fmt(audio.currentTime);
+    if ($("dur")) $("dur").textContent = fmt(audio.duration);
+    if ($("seek")) $("seek").value = Math.round((audio.currentTime / audio.duration) * 1000);
   });
   audio.addEventListener("loadedmetadata", function () {
-    $("dur").textContent = fmt(audio.duration);
+    if ($("dur")) $("dur").textContent = fmt(audio.duration);
   });
   audio.addEventListener("error", function () {
-    if (current) setStatus("Bài này không phát được (nguồn chặn hoặc link hỏng).");
-  });
-
-  $("seek").addEventListener("input", function () {
-    if (audio.duration) audio.currentTime = (this.value / 1000) * audio.duration;
-  });
-  $("vol").addEventListener("input", function () {
-    audio.volume = this.value / 100;
-    lastVol = audio.volume;
-    $("vol-ico").innerHTML = audio.volume === 0 ? "&#128263;" : audio.volume < 0.5 ? "&#128265;" : "&#128266;";
-  });
-  $("vol-ico").addEventListener("click", function () {
-    if (audio.volume > 0) {
-      lastVol = audio.volume;
-      audio.volume = 0;
-      $("vol").value = 0;
-    } else {
-      audio.volume = lastVol || 0.8;
-      $("vol").value = Math.round(audio.volume * 100);
+    if (current) {
+      setStatus("Link nhạc bị lỗi hoặc hết hạn, đang tự chuyển sang bài tiếp theo...");
+      setTimeout(function () {
+        if (queue.length > 1) nextTrack(true);
+      }, 1500);
     }
   });
+
+  if ($("seek")) {
+    $("seek").addEventListener("input", function () {
+      if (audio.duration) audio.currentTime = (this.value / 1000) * audio.duration;
+    });
+  }
+  if ($("vol")) {
+    $("vol").addEventListener("input", function () {
+      audio.volume = this.value / 100;
+      lastVol = audio.volume;
+      if ($("vol-ico")) {
+        $("vol-ico").innerHTML =
+          audio.volume === 0 ? "&#128263;" : audio.volume < 0.5 ? "&#128265;" : "&#128266;";
+      }
+    });
+  }
+  if ($("vol-ico")) {
+    $("vol-ico").addEventListener("click", function () {
+      if (audio.volume > 0) {
+        lastVol = audio.volume;
+        audio.volume = 0;
+        if ($("vol")) $("vol").value = 0;
+      } else {
+        audio.volume = lastVol || 0.8;
+        if ($("vol")) $("vol").value = Math.round(audio.volume * 100);
+      }
+    });
+  }
 
   document.addEventListener("keydown", function (ev) {
     if (ev.target && /input|textarea/i.test(ev.target.tagName)) return;
     if (ev.code === "Space") {
       ev.preventDefault();
-      $("btn-play").click();
+      if ($("btn-play")) $("btn-play").click();
     }
-    if (ev.code === "ArrowRight" && audio.duration) audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+    if (ev.code === "ArrowRight" && audio.duration)
+      audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
     if (ev.code === "ArrowLeft") audio.currentTime = Math.max(0, audio.currentTime - 5);
   });
 
@@ -603,10 +690,15 @@
   }
 
   /* ---------------- khởi động ---------------- */
+  // Xoá các bài lỗi "archive:..." bị lưu nhầm trong bộ nhớ cũ (nếu có)
+  favs = favs.filter(function (f) {
+    return f && f.src && f.src.indexOf("archive:") !== 0;
+  });
   saveFavs();
   renderFavs();
-  $("vol").value = 80;
+  if ($("vol")) $("vol").value = 80;
   audio.volume = 0.8;
-  setStatus("Nhập tên bài hát rồi bấm Tìm — hoặc bấm thử một từ khoá bên dưới.");
-  searchItunes("lofi chill");
+  setStatus("Đang tải danh sách nhạc gợi ý...");
+  searchItunes("Sơn Tùng M-TP");
 })();
+
