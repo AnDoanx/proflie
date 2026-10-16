@@ -1,12 +1,12 @@
 /* ==================================================================
    tiktok.js — lấy video TikTok + tải MP4 không logo / MP3 / ảnh bìa
-   Web tự gọi API công khai, không cần đăng nhập, không cần token.
-   Nếu sau này API đổi, chỉ cần sửa mảng ENDPOINTS bên dưới.
+   + Tích hợp API Check Info User: https://ksjdjdmfmxm.x10.mx/tik1.php?user=
    ================================================================== */
 (function () {
   "use strict";
 
   var ENDPOINTS = ["https://www.tikwm.com/api/", "https://tikwm.com/api/"];
+  var USER_API = "https://ksjdjdmfmxm.x10.mx/tik1.php?user=";
   var HIST_KEY = "ka_tt_hist";
 
   var $ = function (id) {
@@ -21,7 +21,9 @@
   }
 
   function num(n) {
-    n = Number(n) || 0;
+    if (n == null || n === "") return "0";
+    if (typeof n === "string" && /[KMB]$/i.test(n.trim())) return n.trim();
+    n = Number(String(n).replace(/,/g, "")) || 0;
     if (n >= 1e9) return (n / 1e9).toFixed(1) + "B";
     if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
     if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
@@ -35,18 +37,48 @@
       .slice(0, 60);
   }
 
-  /* ---------------- gọi API ---------------- */
+  /* ---------------- Phân loại Input (Video hay Username) ---------------- */
+  function parseInput(raw) {
+    var s = raw.trim();
+    if (!s) return null;
+
+    // 1. Link rút gọn hoặc link chứa /video/ hoặc /photo/ -> Tải Video
+    if (/\/(video|photo|v)\//i.test(s) || /(vm|vt)\.tiktok\.com/i.test(s) || /douyin\.com/i.test(s)) {
+      return { type: "video", value: s };
+    }
+
+    // 2. Link profile dạng tiktok.com/@username -> Check Info User
+    var mProfile = s.match(/tiktok\.com\/@([a-zA-Z0-9._-]+)/i);
+    if (mProfile) {
+      return { type: "user", value: mProfile[1] };
+    }
+
+    // 3. Các link tiktok khác chưa rõ dạng -> Mặc định thử tải Video
+    if (/tiktok\.com/i.test(s)) {
+      return { type: "video", value: s };
+    }
+
+    // 4. Nhập @username hoặc username trực tiếp -> Check Info User
+    var cleanUser = s.replace(/^@/, "");
+    if (/^[a-zA-Z0-9._-]{2,50}$/.test(cleanUser)) {
+      return { type: "user", value: cleanUser };
+    }
+
+    return null;
+  }
+
+  /* ---------------- Gọi API Video (TikWM) ---------------- */
   function fetchInfo(url) {
     var i = 0;
     function attempt() {
-      if (i >= ENDPOINTS.length) return Promise.reject(new Error("API không phản hồi"));
+      if (i >= ENDPOINTS.length) return Promise.reject(new Error("API video không phản hồi"));
       var ep = ENDPOINTS[i++];
       return fetch(ep + "?url=" + encodeURIComponent(url) + "&hd=1")
         .then(function (r) {
           return r.json();
         })
         .then(function (d) {
-          if (!d || d.code !== 0 || !d.data) throw new Error((d && d.msg) || "Link không hợp lệ");
+          if (!d || d.code !== 0 || !d.data) throw new Error((d && d.msg) || "Link video không hợp lệ");
           return d.data;
         })
         .catch(function (e) {
@@ -57,7 +89,103 @@
     return attempt();
   }
 
-  /* ---------------- tải file kèm tiến trình ---------------- */
+  /* ---------------- Gọi API Check Info User (tik1.php) ---------------- */
+  function fetchUserInfo(username) {
+    var clean = String(username).replace(/^@/, "").trim();
+    var targetUrl = USER_API + encodeURIComponent(clean);
+
+    // Tự động thử gọi trực tiếp trước, nếu vướng CORS trên host x10.mx thì tự chuyển qua CORS Proxy
+    var urlsToTry = [
+      targetUrl,
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl),
+      "https://corsproxy.io/?" + encodeURIComponent(targetUrl)
+    ];
+
+    var i = 0;
+    function attempt() {
+      if (i >= urlsToTry.length) {
+        return Promise.reject(new Error("Không kết nối được API check info (Lỗi mạng hoặc CORS)"));
+      }
+      var currentUrl = urlsToTry[i++];
+      return fetch(currentUrl)
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.text();
+        })
+        .then(function (text) {
+          var json;
+          try {
+            json = JSON.parse(text);
+          } catch (err) {
+            throw new Error("Phản hồi từ API không phải JSON hợp lệ");
+          }
+          if (!json || json.error || json.status === "error" || json.code === -1) {
+            throw new Error(json.message || json.msg || json.error || "Không tìm thấy người dùng này");
+          }
+          return normalizeUserData(json, clean);
+        })
+        .catch(function (e) {
+          if (i >= urlsToTry.length) throw e;
+          return attempt();
+        });
+    }
+    return attempt();
+  }
+
+  /* Chuẩn hóa dữ liệu JSON từ tik1.php (hỗ trợ mọi cấu trúc trả về phổ biến) */
+  function normalizeUserData(raw, fallbackUser) {
+    var d = raw.data || raw.user_info || raw.result || raw;
+    var u = d.user || d.author || d;
+    var st = d.stats || d.statistics || u;
+
+    function pick(obj, keys, def) {
+      for (var k = 0; k < keys.length; k++) {
+        var val = obj && obj[keys[k]];
+        if (val !== undefined && val !== null && val !== "") return val;
+      }
+      return def;
+    }
+
+    var uniqueId = pick(u, ["uniqueId", "unique_id", "username", "user", "id_name"], fallbackUser);
+    var nickname = pick(u, ["nickname", "name", "fullname", "display_name", "title"], uniqueId);
+    var uid = pick(u, ["id", "uid", "user_id", "secUid"], "");
+    var avatar = pick(u, ["avatarLarger", "avatarMedium", "avatar", "avatarThumb", "profile_pic", "pic"], "");
+    var bio = pick(u, ["signature", "bio", "description", "desc"], "");
+    var verified = Boolean(pick(u, ["verified", "is_verified"], false));
+    var privateAcc = Boolean(pick(u, ["privateAccount", "is_private", "secret"], false));
+    var region = pick(u, ["region", "country", "language", "location"], "");
+    var createTime = pick(u, ["createTime", "create_time", "created_at", "reg_time"], "");
+
+    var followers = pick(st, ["followerCount", "follower_count", "followers", "fans", "sub_count"], 0);
+    var following = pick(st, ["followingCount", "following_count", "following", "followings"], 0);
+    var hearts = pick(st, ["heartCount", "heart", "heart_count", "total_favorited", "likes", "digg_count"], 0);
+    var videos = pick(st, ["videoCount", "video_count", "videos", "aweme_count"], 0);
+
+    // Đổi timestamp sang ngày tháng nếu createTime là số
+    if (createTime && /^\d{9,10}$/.test(String(createTime))) {
+      var dt = new Date(Number(createTime) * 1000);
+      createTime = dt.toLocaleDateString("vi-VN");
+    }
+
+    return {
+      uniqueId: uniqueId,
+      nickname: nickname,
+      uid: uid,
+      avatar: avatar,
+      bio: bio,
+      verified: verified,
+      privateAcc: privateAcc,
+      region: region,
+      createTime: createTime,
+      followers: followers,
+      following: following,
+      hearts: hearts,
+      videos: videos,
+      raw: raw
+    };
+  }
+
+  /* ---------------- Tải file kèm tiến trình ---------------- */
   function download(url, filename, btn, bar) {
     if (!url) return;
     var old = btn.innerHTML;
@@ -122,7 +250,7 @@
       .catch(fail);
   }
 
-  /* ---------------- lịch sử ---------------- */
+  /* ---------------- Lịch sử ---------------- */
   function readHist() {
     try {
       return JSON.parse(localStorage.getItem(HIST_KEY) || "[]") || [];
@@ -149,6 +277,7 @@
     var h = readHist();
     var box = $("hist-box");
     var list = $("hist");
+    if (!box || !list) return;
     if (!h.length) {
       box.hidden = true;
       return;
@@ -174,22 +303,129 @@
     });
   }
 
-  /* ---------------- giao diện kết quả ---------------- */
-  function loading(url) {
+  /* ---------------- Giao diện kết quả ---------------- */
+  function loading(label) {
     var d = document.createElement("div");
     d.className = "box loading";
-    d.innerHTML = '<span class="spin"></span><span>Đang lấy thông tin: ' + esc(url.slice(0, 70)) + "...</span>";
+    d.innerHTML = '<span class="spin"></span><span>Đang lấy dữ liệu: ' + esc(label.slice(0, 70)) + "...</span>";
     out.appendChild(d);
     return d;
   }
 
-  function errorBox(msg, url) {
+  function errorBox(msg, label) {
     var d = document.createElement("div");
     d.className = "err";
-    d.innerHTML = "<b>Không lấy được video.</b><br />" + esc(msg) + "<br /><small>" + esc(url) + "</small>";
+    d.innerHTML = "<b>Không lấy được dữ liệu.</b><br />" + esc(msg) + "<br /><small>" + esc(label) + "</small>";
     out.appendChild(d);
   }
 
+  /* Render Thẻ Thông Tin User (từ API tik1.php) */
+  function renderUser(u, targetCard) {
+    var card = document.createElement("div");
+    card.className = "vcard ucard";
+
+    var badges = "";
+    if (u.verified) badges += ' <span title="Tích xanh" style="color:#20d5ec">&#10004;</span>';
+    if (u.privateAcc) badges += ' <span title="Tài khoản riêng tư">&#128274;</span>';
+
+    var metaHtml = [];
+    if (u.uid) metaHtml.push("<b>UID:</b> " + esc(u.uid));
+    if (u.region) metaHtml.push("<b>Quốc gia:</b> " + esc(u.region));
+    if (u.createTime) metaHtml.push("<b>Ngày tạo:</b> " + esc(u.createTime));
+
+    card.innerHTML =
+      '<div class="shot">' +
+      (u.avatar ? '<img src="' + esc(u.avatar) + '" alt="Avatar" />' : "<span>&#128100;</span>") +
+      '<span class="dur">INFO</span>' +
+      "</div>" +
+      "<div>" +
+      '<div class="who">' +
+      (u.avatar ? '<img src="' + esc(u.avatar) + '" alt="" />' : "") +
+      "<div><b>" +
+      esc(u.nickname) +
+      badges +
+      "</b><span>@" +
+      esc(u.uniqueId) +
+      "</span></div></div>" +
+      '<p class="ttl">' +
+      (u.bio ? esc(u.bio) : "<i>(Chưa có tiểu sử)</i>") +
+      "</p>" +
+      (metaHtml.length
+        ? '<p class="ttl" style="font-size:0.85em;opacity:0.85;margin-top:4px">' + metaHtml.join(" &bull; ") + "</p>"
+        : "") +
+      '<div class="stats">' +
+      "<span>&#128101; <b>" +
+      num(u.followers) +
+      "</b> Follower</span>" +
+      "<span>&#10145; <b>" +
+      num(u.following) +
+      "</b> Đang follow</span>" +
+      "<span>&#9829; <b>" +
+      num(u.hearts) +
+      "</b> Thích</span>" +
+      "<span>&#127916; <b>" +
+      num(u.videos) +
+      "</b> Video</span>" +
+      "</div>" +
+      '<div class="dls"></div>' +
+      '<div class="prog" hidden><i></i></div>' +
+      "</div>";
+
+    var dls = card.querySelector(".dls");
+    var bar = card.querySelector(".prog");
+    var base = "tiktok_user_" + safeName(u.uniqueId);
+
+    if (u.avatar) {
+      var btnAvt = document.createElement("button");
+      btnAvt.type = "button";
+      btnAvt.className = "dl main";
+      btnAvt.innerHTML = "&#128444; Tải Avatar HD";
+      btnAvt.addEventListener("click", function () {
+        download(u.avatar, base + "_avatar.jpg", btnAvt, bar);
+      });
+      dls.appendChild(btnAvt);
+    }
+
+    if (u.uid) {
+      var btnCopy = document.createElement("button");
+      btnCopy.type = "button";
+      btnCopy.className = "dl";
+      btnCopy.innerHTML = "&#128203; Copy UID";
+      btnCopy.addEventListener("click", function () {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(String(u.uid));
+          var old = btnCopy.innerHTML;
+          btnCopy.innerHTML = "&#10003; Đã copy UID";
+          setTimeout(function () {
+            btnCopy.innerHTML = old;
+          }, 1800);
+        }
+      });
+      dls.appendChild(btnCopy);
+    }
+
+    var profLink = document.createElement("a");
+    profLink.className = "dl";
+    profLink.href = "https://www.tiktok.com/@" + encodeURIComponent(u.uniqueId);
+    profLink.target = "_blank";
+    profLink.rel = "noopener";
+    profLink.innerHTML = "&#128279; Mở trang cá nhân";
+    dls.appendChild(profLink);
+
+    if (targetCard && targetCard.parentNode) {
+      targetCard.parentNode.insertBefore(card, targetCard.nextSibling);
+    } else {
+      out.appendChild(card);
+    }
+
+    pushHist({
+      url: "@" + u.uniqueId,
+      title: "Info: " + u.nickname + " (" + num(u.followers) + " flw)",
+      author: u.uniqueId
+    });
+  }
+
+  /* Render Thẻ Tải Video */
   function render(url, info) {
     var author = (info.author && (info.author.nickname || info.author.unique_id)) || "TikTok";
     var nick = (info.author && info.author.unique_id) || "";
@@ -258,6 +494,29 @@
       dls.appendChild(c);
     }
 
+    // Nút Check Info chủ kênh ngay trên thẻ video
+    if (nick) {
+      var btnInfo = document.createElement("button");
+      btnInfo.type = "button";
+      btnInfo.className = "dl";
+      btnInfo.innerHTML = "&#128100; Check Info Kênh";
+      btnInfo.addEventListener("click", function () {
+        btnInfo.disabled = true;
+        btnInfo.innerHTML = "&#8987; Đang check...";
+        fetchUserInfo(nick)
+          .then(function (uData) {
+            btnInfo.innerHTML = "&#10003; Đã hiện Info";
+            renderUser(uData, card);
+          })
+          .catch(function (err) {
+            btnInfo.disabled = false;
+            btnInfo.innerHTML = "&#128100; Check Info Kênh";
+            alert("Lỗi check info @" + nick + ": " + (err.message || "Không xác định"));
+          });
+      });
+      dls.appendChild(btnInfo);
+    }
+
     var src = document.createElement("a");
     src.className = "dl";
     src.href = url;
@@ -270,38 +529,55 @@
     pushHist({ url: url, title: info.title, author: nick || author });
   }
 
-  /* ---------------- chạy ---------------- */
-  function looksLikeTikTok(u) {
-    return /tiktok\.com|douyin\.com/i.test(u);
-  }
-
+  /* ---------------- Chạy xử lý ---------------- */
   function run() {
-    var raw = $("urls").value.split(/[\s,]+/).filter(Boolean);
-    var urls = raw.filter(looksLikeTikTok);
+    var rawList = $("urls").value.split(/[\s,]+/).filter(Boolean);
+    var tasks = rawList.map(parseInput).filter(Boolean);
     out.innerHTML = "";
-    if (!urls.length) {
-      errorBox("Chưa thấy link TikTok nào. Dán link dạng tiktok.com/@ten/video/... nhé.", raw[0] || "");
+
+    if (!tasks.length) {
+      errorBox(
+        "Nhập link video TikTok (để tải video) hoặc nhập @username / link profile (để check info tài khoản).",
+        rawList[0] || ""
+      );
       return;
     }
+
     $("go").disabled = true;
     var chain = Promise.resolve();
-    urls.slice(0, 8).forEach(function (u) {
+
+    tasks.slice(0, 8).forEach(function (item) {
       chain = chain.then(function () {
-        var box = loading(u);
-        return fetchInfo(u)
-          .then(function (info) {
-            box.remove();
-            render(u, info);
-          })
-          .catch(function (e) {
-            box.remove();
-            errorBox(e.message || "Lỗi không xác định", u);
-            return new Promise(function (r) {
-              setTimeout(r, 400);
+        var label = item.type === "user" ? "@" + item.value : item.value;
+        var box = loading(label);
+
+        if (item.type === "user") {
+          return fetchUserInfo(item.value)
+            .then(function (uData) {
+              box.remove();
+              renderUser(uData);
+            })
+            .catch(function (e) {
+              box.remove();
+              errorBox(e.message || "Lỗi check info user", label);
             });
-          });
+        } else {
+          return fetchInfo(item.value)
+            .then(function (info) {
+              box.remove();
+              render(item.value, info);
+            })
+            .catch(function (e) {
+              box.remove();
+              errorBox(e.message || "Lỗi không xác định", label);
+              return new Promise(function (r) {
+                setTimeout(r, 400);
+              });
+            });
+        }
       });
     });
+
     chain.then(function () {
       $("go").disabled = false;
     });
@@ -329,14 +605,16 @@
         alert("Không đọc được clipboard — bạn dán tay giúp mình nhé.");
       });
   });
-  $("hist-clear").addEventListener("click", function () {
-    try {
-      localStorage.removeItem(HIST_KEY);
-    } catch (e) {
-      /* ignore */
-    }
-    renderHist();
-  });
+  if ($("hist-clear")) {
+    $("hist-clear").addEventListener("click", function () {
+      try {
+        localStorage.removeItem(HIST_KEY);
+      } catch (e) {
+        /* ignore */
+      }
+      renderHist();
+    });
+  }
   $("urls").addEventListener("keydown", function (ev) {
     if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) run();
   });
