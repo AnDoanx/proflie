@@ -1,5 +1,5 @@
 /* ==================================================================
-   skills.js — 8 ô kỹ năng tương tác trên trang chủ (Phiên bản Nâng cấp)
+   skills.js — 8 ô kỹ năng tương tác siêu bùng nổ (Cyberpunk / Gaming Edition)
    ================================================================== */
 (function () {
   "use strict";
@@ -146,9 +146,7 @@
   function saveXp() {
     try {
       localStorage.setItem(XP_KEY, JSON.stringify(xp));
-    } catch (e) {
-      /* ignore */
-    }
+    } catch (e) {}
   }
 
   function el(tag, cls, txt) {
@@ -158,35 +156,98 @@
     return n;
   }
 
-  // Hiệu ứng âm thanh nhỏ khi bấm luyện tập (Sử dụng Web Audio API tích hợp sẵn)
-  function playBeep() {
+  // Âm thanh tổng hợp Web Audio API (Chế độ bùng nổ)
+  function playBlastSound(isLevelUp) {
     try {
       var ctx = new (window.AudioContext || window.webkitAudioContext)();
       var osc = ctx.createOscillator();
       var gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // Nốt D5 vui tươi
-      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      osc.type = isLevelUp ? "triangle" : "sine";
+      
+      var now = ctx.currentTime;
+      if (isLevelUp) {
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+        osc.frequency.exponentialRampToValueAtTime(1320, now + 0.3);
+      } else {
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+      }
+
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + (isLevelUp ? 0.35 : 0.1));
+      
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.1);
-    } catch (e) {
-      // Bỏ qua nếu trình duyệt chặn AudioContext chưa tương tác
+      osc.start(now);
+      osc.stop(now + (isLevelUp ? 0.35 : 0.1));
+    } catch (e) {}
+  }
+
+  function getRankTitle(lvl) {
+    if (lvl >= 95) return "⚡ HUYỀN THOẠI TỐI THƯỢNG";
+    if (lvl >= 90) return "🔥 ĐẠI CA CAO THỦ";
+    if (lvl >= 85) return "⭐ CHUYÊN GIA KHÉT TIẾNG";
+    if (lvl >= 75) return "🎯 BẬC THẦY KINH NGHIỆM";
+    if (lvl >= 70) return "📘 TAY TO THÀNH THẠO";
+    return "🌱 TẬP SỰ TIỀM NĂNG";
+  }
+
+  /* Tạo hiệu ứng bắn hạt pháo hoa mini (Particle Explosion) */
+  function createParticles(x, y, color) {
+    for (var i = 0; i < 10; i++) {
+      var p = document.createElement("div");
+      p.className = "sk-particle";
+      var angle = Math.random() * Math.PI * 2;
+      var speed = 20 + Math.random() * 50;
+      var tx = Math.cos(angle) * speed;
+      var ty = Math.sin(angle) * speed;
+
+      p.style.left = x + "px";
+      p.style.top = y + "px";
+      p.style.background = color || "#59c1ff";
+      p.style.setProperty("--tx", tx + "px");
+      p.style.setProperty("--ty", ty + "px");
+      
+      document.body.appendChild(p);
+      setTimeout(function(particle) {
+        particle.remove();
+      }, 600, p);
     }
   }
 
-  // Tính danh hiệu dựa trên cấp độ kỹ năng hiện tại
-  function getRankTitle(lvl) {
-    if (lvl >= 95) return "🏆 Đại Sư Thần Sầu";
-    if (lvl >= 90) return "🔥 Siêu Cao Thủ";
-    if (lvl >= 85) return "⭐ Chuyên Gia";
-    if (lvl >= 75) return "🎯 Lão Luyện";
-    if (lvl >= 70) return "📘 Thành Thạo";
-    return "🌱 Tập Sự";
-  }
+  // Inject CSS cho hiệu ứng pháo hoa động trực tiếp vào trang
+  var styleSheet = document.createElement("style");
+  styleSheet.type = "text/css";
+  styleSheet.innerText = `
+    @keyframes particleFly {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+    .sk-particle {
+      position: fixed;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99999;
+      animation: particleFly 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    }
+    .sk-pop-blast {
+      position: fixed;
+      font-weight: 900;
+      font-size: 1.2rem;
+      pointer-events: none;
+      z-index: 99999;
+      text-shadow: 0 0 10px rgba(255,255,255,0.8);
+      animation: blastUp 0.8s ease-out forwards;
+    }
+    @keyframes blastUp {
+      0% { transform: translateY(0) scale(0.8); opacity: 1; }
+      100% { transform: translateY(-50px) scale(1.4); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(styleSheet);
 
   /* ---------- Dựng 8 ô kỹ năng ---------- */
   var tiles = [];
@@ -217,7 +278,7 @@
 
     var row = el("div", "sk-row");
     row.appendChild(el("span", "sk-lvl", "Lv." + currentLvl));
-    row.appendChild(el("span", "sk-xp", "+" + currentXp + " luyện"));
+    row.appendChild(el("span", "sk-xp", "+" + currentXp + " XP"));
 
     tile.appendChild(top);
     tile.appendChild(bar);
@@ -234,7 +295,6 @@
     tiles.push({ s: s, tile: tile, fill: fill });
   });
 
-  /* Thanh % chạy mượt khi trang vừa load */
   window.addEventListener("load", function () {
     tiles.forEach(function (t) {
       var currentXp = xp[t.s.id] || 0;
@@ -245,7 +305,7 @@
     });
   });
 
-  /* ---------- Popup Chi tiết ---------- */
+  /* ---------- Popup Chi tiết Siêu Cấp ---------- */
   var modal = document.getElementById("skill-modal");
   var current = null;
 
@@ -260,7 +320,7 @@
     document.getElementById("sk-title").textContent = s.name;
     document.getElementById("sk-tag").textContent = s.sub + " • " + getRankTitle(currentLvl);
     document.getElementById("sk-desc").textContent = s.desc;
-    document.getElementById("sk-count").textContent = "+" + currentXp + " lần luyện tập (" + currentLvl + "%)";
+    document.getElementById("sk-count").textContent = "⚡ " + currentXp + " Điểm cày cấy (Lv." + currentLvl + ")";
 
     var barsBox = document.getElementById("sk-bars");
     barsBox.innerHTML = "";
@@ -314,48 +374,45 @@
 
     var train = document.getElementById("sk-train");
     if (train)
-      train.addEventListener("click", function () {
+      train.addEventListener("click", function (ev) {
         if (!current) return;
         var id = current.s.id;
+        var oldLvl = Math.min(100, current.s.level + Math.floor((xp[id] || 0) / 3));
+        
         xp[id] = (xp[id] || 0) + 1;
         saveXp();
-        playBeep();
-
-        // Rung nhẹ điện thoại nếu hỗ trợ (Haptic feedback)
-        if (navigator.vibrate) {
-          navigator.vibrate(40);
-        }
 
         var currentXp = xp[id];
-        var lvl = Math.min(100, current.s.level + Math.floor(currentXp / 3));
+        var newLvl = Math.min(100, current.s.level + Math.floor(currentXp / 3));
+        var isLevelUp = newLvl > oldLvl;
 
-        document.getElementById("sk-count").textContent = "+" + currentXp + " lần luyện tập (" + lvl + "%)";
-        document.getElementById("sk-tag").textContent = current.s.sub + " • " + getRankTitle(lvl);
+        playBlastSound(isLevelUp);
+
+        if (navigator.vibrate) {
+          navigator.vibrate(isLevelUp ? [80, 50, 80] : 45);
+        }
+
+        // Bắn pháo hoa hạt năng lượng tại vị trí click
+        var rect = train.getBoundingClientRect();
+        createParticles(rect.left + rect.width / 2, rect.top + rect.height / 2, current.s.c1);
+
+        document.getElementById("sk-count").textContent = "⚡ " + currentXp + " Điểm cày cấy (Lv." + newLvl + ")";
+        document.getElementById("sk-tag").textContent = current.s.sub + " • " + getRankTitle(newLvl);
 
         var xpEl = current.tile.querySelector(".sk-xp");
-        if (xpEl) xpEl.textContent = "+" + currentXp + " luyện";
+        if (xpEl) xpEl.textContent = "+" + currentXp + " XP";
         
         var lvlEl = current.tile.querySelector(".sk-lvl");
-        if (lvlEl) lvlEl.textContent = "Lv." + lvl;
+        if (lvlEl) lvlEl.textContent = "Lv." + newLvl;
         
-        current.fill.style.width = lvl + "%";
+        current.fill.style.width = newLvl + "%";
 
-        // Thêm hiệu ứng bay chữ +1 XP độc đáo tại vị trí nút bấm
-        var r = train.getBoundingClientRect();
-        var pop = el("div", "sk-pop", "+1 XP 🔥");
-        pop.style.left = r.left + r.width / 2 + "px";
-        pop.style.top = r.top - 10 + "px";
-        pop.style.position = "fixed";
-        pop.style.zIndex = "9999";
-        pop.style.fontWeight = "bold";
-        pop.style.color = current.s.c1;
-        pop.style.transition = "transform 0.8s ease, opacity 0.8s ease";
+        // Hiệu ứng chữ bùng nổ bay lên
+        var pop = el("div", "sk-pop-blast", isLevelUp ? "🚀 LEVEL UP! +1" : "🔥 +1 XP");
+        pop.style.left = (rect.left + rect.width / 2 - 30) + "px";
+        pop.style.top = (rect.top - 20) + "px";
+        pop.style.color = isLevelUp ? "#ffe600" : current.s.c1;
         document.body.appendChild(pop);
-
-        requestAnimationFrame(function() {
-          pop.style.transform = "translateY(-40px) scale(1.2)";
-          pop.style.opacity = "0";
-        });
 
         setTimeout(function () {
           pop.remove();
@@ -363,7 +420,6 @@
       });
   }
 
-  /* ---------- Ô Music: hiện bài đang phát ---------- */
   function paintNowPlaying() {
     var box = document.getElementById("np-mini");
     var tile = document.getElementById("w-music");
@@ -386,4 +442,3 @@
   window.addEventListener("storage", paintNowPlaying);
   window.addEventListener("focus", paintNowPlaying);
 })();
-
