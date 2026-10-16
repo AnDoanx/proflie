@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Khoa An | Tải video TikTok không logo" />
+    <meta name="author" content="Khoa An" />
+    <meta name="theme-color" content="#ffceaa" />
+    <link rel="icon" href="./favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+    <title>T&#7843;i video TikTok &bull; Khoa An</title>
+    <link rel="stylesheet" href="./css/tiktok.css" />
+  </head>
+  <body>
+    <div class="bg-blur" aria-hidden="true"></div>
+
+    <header class="page-head">
+      <a class="back" href="./index.html">&#8592; Trang ch&#7911;</a>
+      <div class="head-txt">
+        <h1>&#11015; T&#7843;i video TikTok</h1>
+        <p>D&#225;n link video &rarr; t&#7843;i MP4 kh&#244;ng logo, MP3 ho&#7863;c &#7843;nh b&#236;a</p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="box">
+        <label class="lbl" for="urls">Link video (m&#7895;i d&#242;ng m&#7897;t link)</label>
+        <textarea id="urls" rows="3" placeholder="https://www.tiktok.com/@tambiettiktok13/video/...
+https://vt.tiktok.com/xxxxxxx/"></textarea>
+        <div class="row-btns">
+          <button class="btn primary" id="go" type="button">&#128269; L&#7845;y video</button>
+          <button class="btn ghost" id="paste" type="button">&#128203; D&#225;n t&#7915; clipboard</button>
+          <button class="btn ghost" id="clear" type="button">Xo&#225; h&#7871;t</button>
+        </div>
+        <p class="hint">
+          Kh&#244;ng c&#7847;n &#273;&#259;ng nh&#7853;p, kh&#244;ng c&#7847;n token &mdash; web t&#7921; g&#7885;i API c&#244;ng khai. Link d&#7841;ng <code>vm.tiktok.com</code> /
+          <code>vt.tiktok.com</code> c&#361;ng &#273;&#432;&#7907;c.
+        </p>
+      </section>
+
+      <section id="out" class="out"></section>
+
+      <section class="box" id="hist-box" hidden>
+        <div class="hist-head">
+          <b>&#128340; V&#7915;a t&#7843;i g&#7847;n &#273;&#226;y</b>
+          <button class="btn tiny ghost" id="hist-clear" type="button">Xo&#225; l&#7883;ch s&#7917;</button>
+        </div>
+        <div id="hist" class="hist"></div>
+      </section>
+    </main>
+
+    <script defer src="./scripts/tiktok.js"></script>
+  </body>
+</html>

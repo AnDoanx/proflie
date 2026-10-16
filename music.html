@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Khoa An | Nghe nhạc online" />
+    <meta name="author" content="Khoa An" />
+    <meta name="theme-color" content="#ffceaa" />
+    <link rel="icon" href="./favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playpen+Sans:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>Nghe nhạc &bull; Khoa An</title>
+    <link rel="stylesheet" href="./css/music.css" />
+  </head>
+  <body>
+    <div class="bg-blur" aria-hidden="true"></div>
+
+    <header class="page-head">
+      <a class="back" href="./index.html">&#8592; Trang ch&#7911;</a>
+      <div class="head-txt">
+        <h1>&#127911; Nghe nh&#7841;c</h1>
+        <p>T&#236;m b&#224;i h&#225;t, nghe th&#7917; 30 gi&#226;y, ho&#7863;c m&#7903; file nh&#7841;c trong m&#225;y c&#7911;a b&#7841;n</p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <nav class="tabs" id="tabs">
+        <button class="tab is-active" data-tab="online" type="button">&#127760; T&#236;m online</button>
+        <button class="tab" data-tab="mine" type="button">&#128193; M&#225;y c&#7911;a t&#244;i</button>
+        <button class="tab" data-tab="link" type="button">&#128279; D&#225;n link</button>
+        <button class="tab" data-tab="fav" type="button">&#9829; Y&#234;u th&#237;ch <span id="fav-count">0</span></button>
+      </nav>
+
+      <!-- ---------------- ONLINE ---------------- -->
+      <section class="pane is-active" id="pane-online">
+        <form class="searchbar" id="search-form">
+          <input id="q" type="search" placeholder="T&#234;n b&#224;i h&#225;t ho&#7863;c ca s&#297;..." autocomplete="off" />
+          <button type="submit">T&#236;m</button>
+        </form>
+
+        <div class="src-row">
+          <span class="src-label">Ngu&#7891;n:</span>
+          <button class="chip src is-active" data-src="itunes" type="button">iTunes &bull; nghe th&#7917; 30s</button>
+          <button class="chip src" data-src="archive" type="button">Archive.org &bull; nguy&#234;n b&#224;i</button>
+        </div>
+
+        <div class="chips-row" id="quick">
+          <button class="chip" data-q="lofi chill" type="button">lofi chill</button>
+          <button class="chip" data-q="anime ost" type="button">anime ost</button>
+          <button class="chip" data-q="vpop hay" type="button">vpop</button>
+          <button class="chip" data-q="kpop 2024" type="button">kpop</button>
+          <button class="chip" data-q="piano relaxing" type="button">piano</button>
+          <button class="chip" data-q="rap viet" type="button">rap vi&#7879;t</button>
+        </div>
+
+        <p class="status" id="online-status"></p>
+        <div class="results" id="results"></div>
+      </section>
+
+      <!-- ---------------- LOCAL FILES ---------------- -->
+      <section class="pane" id="pane-mine">
+        <p class="hint">
+          Ch&#7885;n file nh&#7841;c trong m&#225;y &#273;&#7875; nghe ngay (kh&#244;ng t&#7843;i l&#234;n &#273;&#226;u c&#7843;, ch&#7881; ch&#7841;y trong tr&#236;nh duy&#7879;t).
+          Mu&#7889;n &#273;&#7875; s&#7861;n danh s&#225;ch tr&#234;n web th&#236; &#273;&#7863;t file v&#224;o th&#432; m&#7909;c <code>music/</code> r&#7891;i khai b&#225;o trong <code>music/playlist.json</code>.
+        </p>
+        <div class="row-btns">
+          <label class="btn-file">
+            &#43; Ch&#7885;n file trong m&#225;y
+            <input type="file" id="file-input" accept="audio/*" multiple hidden />
+          </label>
+          <button class="btn-ghost" id="load-json" type="button">N&#7841;p music/playlist.json</button>
+        </div>
+        <div class="results" id="local-results"></div>
+      </section>
+
+      <!-- ---------------- PASTE LINK ---------------- -->
+      <section class="pane" id="pane-link">
+        <p class="hint">D&#225;n link tr&#7921;c ti&#7871;p t&#7899;i file nh&#7841;c (.mp3 / .m4a / .ogg / .wav).</p>
+        <form class="searchbar" id="link-form">
+          <input id="link-input" type="url" placeholder="https://.../bai-hat.mp3" />
+          <button type="submit">Ph&#225;t</button>
+        </form>
+      </section>
+
+      <!-- ---------------- FAVOURITES ---------------- -->
+      <section class="pane" id="pane-fav">
+        <p class="hint">B&#7845;m &#9829; tr&#234;n b&#224;i h&#225;t &#273;&#7875; l&#432;u v&#224;o &#273;&#226;y. Danh s&#225;ch &#273;&#432;&#7907;c l&#432;u trong tr&#236;nh duy&#7879;t c&#7911;a b&#7841;n.</p>
+        <div class="results" id="fav-results"></div>
+      </section>
+    </main>
+
+    <!-- ---------------- PLAYER ---------------- -->
+    <div class="player" id="player">
+      <div class="p-left">
+        <div class="cover" id="cover"><span>&#127925;</span></div>
+        <div class="p-meta">
+          <div class="p-title" id="p-title">Ch&#432;a ch&#7885;n b&#224;i n&#224;o</div>
+          <div class="p-artist" id="p-artist">B&#7845;m v&#224;o m&#7897;t b&#224;i &#273;&#7875; ph&#225;t</div>
+        </div>
+        <button class="p-fav" id="p-fav" type="button" title="Y&#234;u th&#237;ch">&#9825;</button>
+      </div>
+
+      <div class="p-center">
+        <div class="p-btns">
+          <button id="btn-shuffle" type="button" title="Ng&#7851;u nhi&#234;n">&#128256;</button>
+          <button id="btn-prev" type="button" title="B&#224;i tr&#432;&#7899;c">&#9198;</button>
+          <button id="btn-play" class="play" type="button" title="Ph&#225;t / D&#7915;ng">&#9654;</button>
+          <button id="btn-next" type="button" title="B&#224;i ti&#7871;p">&#9197;</button>
+          <button id="btn-repeat" type="button" title="L&#7863;p l&#7841;i">&#128257;</button>
+        </div>
+        <div class="p-seek">
+          <span id="cur">0:00</span>
+          <input id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Tua" />
+          <span id="dur">0:00</span>
+        </div>
+      </div>
+
+      <div class="p-right">
+        <span class="vol-ico" id="vol-ico">&#128266;</span>
+        <input id="vol" type="range" min="0" max="100" value="80" aria-label="&#194;m l&#432;&#7907;ng" />
+        <a class="p-home" href="./tiktok.html" title="T&#7843;i video TikTok">&#11015;</a>
+      </div>
+    </div>
+
+    <audio id="audio" preload="metadata"></audio>
+    <script defer src="./scripts/music.js"></script>
+  </body>
+</html>
