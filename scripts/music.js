@@ -13,7 +13,6 @@
   };
   var audio = $("audio");
 
-  // Đặt crossOrigin = null để thẻ <audio> phát được nhạc từ mọi CDN mà không bị chặn CORS
   if (audio) {
     audio.removeAttribute("crossorigin");
   }
@@ -113,7 +112,6 @@
     }
   }
 
-  // Hàm gọi JSONP giúp vượt 100% lỗi chặn CORS khi mở trực tiếp file HTML
   function jsonp(url, callbackParam) {
     return new Promise(function (resolve, reject) {
       var cbName = "ka_jsonp_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
@@ -155,7 +153,7 @@
       if (index < 0) index = 0;
     }
     current = t;
-    setStatus("Đang tải nhạc: " + t.title + "...");
+    setStatus("⏳ Đang kết nối âm thanh: " + t.title + "...");
 
     audio.pause();
     audio.src = t.src;
@@ -167,12 +165,12 @@
     var p = audio.play();
     if (p && p.then) {
       p.then(function () {
-        setStatus("Đang phát: " + t.title + " — " + t.artist);
+        setStatus("🎧 Đang phát: " + t.title + " — " + t.artist);
       }).catch(function (err) {
         if (err.name === "NotAllowedError") {
-          setStatus("Bấm nút ▶ bên dưới để bắt đầu phát nhạc.");
+          setStatus("👉 Bấm nút ▶ ở thanh điều khiển bên dưới để bắt đầu nghe.");
         } else {
-          setStatus("Không phát được bài này, đang thử chuyển bài...");
+          setStatus("⚠️ Không phát được bài này, đang thử chuyển bài...");
         }
       });
     }
@@ -313,7 +311,7 @@
     if (!list.length) {
       var p = document.createElement("p");
       p.className = "hint";
-      p.textContent = "Không có bài nào.";
+      p.textContent = "Chưa có bài hát nào trong mục này.";
       box.appendChild(p);
       return;
     }
@@ -332,15 +330,14 @@
     markPlaying();
   }
 
-  /* ---------------- nguồn 1: iTunes + Deezer JSONP (100% chạy được) ---------------- */
+  /* ---------------- nguồn 1: iTunes + Deezer JSONP ---------------- */
   function searchItunes(q) {
-    setStatus("Đang tìm bài hát...");
+    setStatus("🔍 Đang tìm kiếm \"" + q + "\"...");
     $("results").innerHTML = "";
     var url =
       "https://itunes.apple.com/search?media=music&entity=song&limit=28&country=VN&term=" +
       encodeURIComponent(q);
 
-    // Dùng JSONP thay vì fetch để không bao giờ bị lỗi CORS
     return jsonp(url, "callback")
       .then(function (d) {
         var list = (d.results || [])
@@ -356,19 +353,18 @@
             );
           });
         if (!list.length) {
-          return searchDeezer(q); // Nếu iTunes không có, tự động tìm qua Deezer
+          return searchDeezer(q);
         }
-        setStatus("Tìm thấy " + list.length + " bài trên iTunes (bấm vào bài bất kỳ để nghe).");
+        setStatus("✨ Tìm thấy " + list.length + " bài hát — Bấm vào bài bất kỳ để phát ngay.");
         renderInto($("results"), list, "iTunes");
       })
       .catch(function () {
-        // Dự phòng sang Deezer nếu mạng chặn iTunes
         return searchDeezer(q);
       });
   }
 
   function searchDeezer(q) {
-    setStatus("Đang tìm trên máy chủ dự phòng Deezer...");
+    setStatus("🔍 Đang tìm trên kho nhạc Deezer...");
     var url = "https://api.deezer.com/search?output=jsonp&limit=28&q=" + encodeURIComponent(q);
     return jsonp(url, "callback")
       .then(function (d) {
@@ -385,21 +381,20 @@
             );
           });
         if (!list.length) {
-          setStatus("Không tìm thấy bài nào. Hãy thử từ khoá khác nhé.");
+          setStatus("Không tìm thấy bài nào khớp với từ khoá. Thử tên khác nhé!");
           return;
         }
-        setStatus("Tìm thấy " + list.length + " bài trên Deezer (bấm vào bài bất kỳ để nghe).");
+        setStatus("✨ Tìm thấy " + list.length + " bài trên Deezer — Bấm vào để nghe.");
         renderInto($("results"), list, "Deezer");
       })
       .catch(function () {
-        setStatus("Không kết nối được nguồn nhạc. Kiểm tra mạng rồi thử lại.");
+        setStatus("⚠️ Không kết nối được nguồn nhạc. Hãy kiểm tra mạng của bạn.");
       });
   }
 
-  /* ---------------- nguồn 2: Audius + Jamendo (Nghe nguyên bài Full Track) ---------------- */
-  // Thay thế Archive.org bằng Audius API (Chuyên nhạc Full bài, có ảnh bìa, phát cực nhanh)
+  /* ---------------- nguồn 2: Audius (Full Track) ---------------- */
   function searchArchive(q) {
-    setStatus("Đang tìm nhạc nguyên bài (Full track)...");
+    setStatus("🔍 Đang tìm bản Full nguyên bài cho \"" + q + "\"...");
     $("results").innerHTML = "";
     var url =
       "https://discoveryprovider.audius.co/v1/tracks/search?query=" +
@@ -414,7 +409,6 @@
       .then(function (d) {
         var docs = (d && d.data) || [];
         if (!docs.length) {
-          setStatus("Không tìm thấy bản Full nào trên Audius. Đang chuyển sang tìm nhanh...");
           return searchDeezer(q);
         }
         var list = docs.slice(0, 28).map(function (item) {
@@ -425,13 +419,12 @@
           var cover = item.artwork ? item.artwork["480x480"] || item.artwork["150x150"] || "" : "";
           var durText = item.duration ? " • " + fmt(item.duration) : "";
           var artist = (item.user && (item.user.name || item.user.handle)) || "Audius Artist";
-          return track(streamUrl, item.title, artist + durText + " (Full bài)", cover);
+          return track(streamUrl, item.title, artist + durText + " (Full)", cover);
         });
-        setStatus("Tìm thấy " + list.length + " bài nguyên bản (Full track). Bấm vào để nghe ngay!");
+        setStatus("🎵 Tìm thấy " + list.length + " bản Full nguyên bài — Bấm vào để thưởng thức!");
         renderInto($("results"), list, "Full Track");
       })
       .catch(function () {
-        // Nếu Audius bảo trì, tự động fallback về Deezer để đảm bảo 100% có nhạc nghe
         return searchDeezer(q);
       });
   }
@@ -447,7 +440,6 @@
     }
     renderInto($("local-results"), localList, "File trong máy");
     if (localList.length) {
-      setStatus("");
       playTrack(localList[localList.length - 1], localList);
     }
   }
@@ -466,13 +458,12 @@
           );
         });
         renderInto($("local-results"), localList, "Playlist");
-        setStatus("Đã nạp " + arr.length + " bài từ music/playlist.json");
+        setStatus("✅ Đã nạp " + arr.length + " bài từ music/playlist.json");
       })
       .catch(function () {
         alert(
-          "Chưa có file music/playlist.json.\n\nTạo file đó trong project với nội dung:\n" +
-            '[\n  { "title": "Tên bài", "artist": "Ca sĩ", "file": "bai-hat.mp3" }\n]\n\n' +
-            "và copy file nhạc .mp3 vào thư mục music/ nhé."
+          "Chưa tìm thấy file music/playlist.json.\n\nHãy tạo file đó trong thư mục project với cấu trúc:\n" +
+            '[\n  { "title": "Tên bài", "artist": "Ca sĩ", "file": "bai-hat.mp3" }\n]'
         );
       });
   }
@@ -489,7 +480,6 @@
   }
 
   /* ---------------- gắn sự kiện ---------------- */
-  // tabs
   var tabs = document.querySelectorAll(".tab");
   for (var i = 0; i < tabs.length; i++) {
     tabs[i].addEventListener("click", function () {
@@ -504,13 +494,8 @@
     });
   }
 
-  // nguồn online
   var srcs = document.querySelectorAll(".chip.src");
   for (var s = 0; s < srcs.length; s++) {
-    // Đổi nhãn Archive.org trên giao diện (nếu có) thành Nhạc Full Bài cho dễ hiểu
-    if (srcs[s].dataset.src === "archive") {
-      srcs[s].textContent = "Audius (Nguyên bài)";
-    }
     srcs[s].addEventListener("click", function () {
       for (var j = 0; j < srcs.length; j++) srcs[j].classList.remove("is-active");
       this.classList.add("is-active");
@@ -542,7 +527,6 @@
     });
   }
 
-  // file trong máy
   if ($("file-input")) {
     $("file-input").addEventListener("change", function () {
       addLocalFiles(this.files || []);
@@ -552,19 +536,17 @@
     $("load-json").addEventListener("click", loadPlaylistJson);
   }
 
-  // dán link
   if ($("link-form")) {
     $("link-form").addEventListener("submit", function (ev) {
       ev.preventDefault();
       var v = $("link-input").value.trim();
       if (!v) return;
-      var name = v.split("/").pop().split("?")[0] || "Link";
-      var t = track(v, decodeURIComponent(name), "Từ link");
+      var name = v.split("/").pop().split("?")[0] || "Link nhạc";
+      var t = track(v, decodeURIComponent(name), "Từ đường dẫn trực tiếp");
       playTrack(t, [t]);
     });
   }
 
-  // player
   if ($("btn-play")) {
     $("btn-play").addEventListener("click", function () {
       if (!current) {
@@ -605,10 +587,12 @@
   }
 
   audio.addEventListener("play", function () {
+    document.body.classList.add("is-playing");
     if ($("btn-play")) $("btn-play").innerHTML = "&#10073;&#10073;";
     if (current) publish({ title: current.title, artist: current.artist, playing: true });
   });
   audio.addEventListener("pause", function () {
+    document.body.classList.remove("is-playing");
     if ($("btn-play")) $("btn-play").innerHTML = "&#9654;";
     if (current) publish({ title: current.title, artist: current.artist, playing: false });
   });
@@ -626,7 +610,7 @@
   });
   audio.addEventListener("error", function () {
     if (current) {
-      setStatus("Link nhạc bị lỗi hoặc hết hạn, đang tự chuyển sang bài tiếp theo...");
+      setStatus("⚠️ Link nhạc này bị lỗi, đang tự chuyển sang bài kế tiếp...");
       setTimeout(function () {
         if (queue.length > 1) nextTrack(true);
       }, 1500);
@@ -690,7 +674,6 @@
   }
 
   /* ---------------- khởi động ---------------- */
-  // Xoá các bài lỗi "archive:..." bị lưu nhầm trong bộ nhớ cũ (nếu có)
   favs = favs.filter(function (f) {
     return f && f.src && f.src.indexOf("archive:") !== 0;
   });
@@ -698,7 +681,5 @@
   renderFavs();
   if ($("vol")) $("vol").value = 80;
   audio.volume = 0.8;
-  setStatus("Đang tải danh sách nhạc gợi ý...");
   searchItunes("Sơn Tùng M-TP");
 })();
-
