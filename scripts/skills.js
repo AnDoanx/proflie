@@ -1,6 +1,5 @@
 /* ==================================================================
-   skills.js — 8 ô kỹ năng tương tác trên trang chủ
-   Muốn đổi tên / mức độ / mô tả: sửa mảng SKILLS bên dưới rồi lưu file.
+   skills.js — 8 ô kỹ năng tương tác trên trang chủ (Phiên bản Nâng cấp)
    ================================================================== */
 (function () {
   "use strict";
@@ -8,93 +7,93 @@
   var SKILLS = [
     {
       id: "gaming",
-      emoji: "\uD83C\uDFAE",
+      emoji: "🎮",
       name: "Gaming",
-      sub: "FPS \u2022 MOBA \u2022 Souls-like",
+      sub: "FPS • MOBA • Souls-like",
       level: 88,
       c1: "#7a5cff",
       c2: "#59c1ff",
-      desc: "Ch\u01A1i game t\u1EEB nh\u1ECF, th\u1EC3 lo\u1EA1i n\u00E0o c\u0169ng th\u1EED. FPS l\u00E0 m\u1EA1nh nh\u1EA5t, c\u00F2n Souls-like th\u00EC nghi\u1EC7n v\u00EC\u2026 kh\u00F3.",
+      desc: "Chơi game từ nhỏ, thể loại nào cũng thử. FPS là mạnh nhất, còn Souls-like thì nghiện vì… khó.",
       bars: [
-        ["FPS / B\u1EAFn s\u00FAng", 92],
+        ["FPS / Bắn súng", 92],
         ["MOBA", 85],
         ["Souls-like", 78],
       ],
-      chips: ["PC", "Valorant", "Li\u00EAn Qu\u00E2n", "Minecraft", "Elden Ring"],
+      chips: ["PC", "Valorant", "Liên Quân", "Minecraft", "Elden Ring"],
     },
     {
       id: "biker",
-      emoji: "\uD83C\uDFCD\uFE0F",
+      emoji: "🏍️",
       name: "Biker",
       sub: "Kawasaki Ninja 400",
       level: 82,
       c1: "#ff7b7b",
       c2: "#ffb36b",
-      desc: "M\u00EA xe m\u00E1y v\u00E0 nh\u1EEFng chuy\u1EBFn \u0111i xa. Th\u00EDch t\u1EF1 ch\u0103m xe, thay d\u1EA7u, v\u1EC7 sinh kim phun v\u00E0 \u0111i tour cu\u1ED1i tu\u1EA7n.",
+      desc: "Mê xe máy và những chuyến đi xa. Thích tự chăm xe, thay dầu, vệ sinh kim phun và đi tour cuối tuần.",
       bars: [
-        ["L\u00E1i xe / x\u1EED l\u00FD t\u00ECnh hu\u1ED1ng", 86],
-        ["B\u1EA3o d\u01B0\u1EE1ng c\u01A1 b\u1EA3n", 74],
-        ["Tour \u0111\u01B0\u1EDDng d\u00E0i", 80],
+        ["Lái xe / xử lý tình huống", 86],
+        ["Bảo dưỡng cơ bản", 74],
+        ["Tour đường dài", 80],
       ],
-      chips: ["Ninja 400", "Tour", "\u0110\u1ED9 xe", "B\u1EA3o d\u01B0\u1EE1ng"],
+      chips: ["Ninja 400", "Tour", "Độ xe", "Bảo dưỡng"],
     },
     {
       id: "anime",
-      emoji: "\uD83C\uDF38",
+      emoji: "🌸",
       name: "Anime & Manga",
-      sub: "Otaku ch\u00EDnh hi\u1EC7u",
+      sub: "Otaku chính hiệu",
       level: 90,
       c1: "#ff8fd0",
       c2: "#ffd166",
-      desc: "Xem anime m\u1ED7i t\u1ED1i, \u0111\u1ECDc manga v\u00E0 s\u01B0u t\u1EA7m h\u00ECnh. Gu: slice of life, romance v\u00E0 m\u1EA5y b\u1ED9 nh\u1EA1c nh\u1EBD nh\u00E0ng.",
+      desc: "Xem anime mỗi tối, đọc manga và sưu tầm hình. Gu: slice of life, romance và mấy bộ nhạc nhẹ nhàng.",
       bars: [
         ["Anime", 95],
         ["Manga", 88],
-        ["S\u01B0u t\u1EA7m / figure", 72],
+        ["Sưu tầm / figure", 72],
       ],
       chips: ["Slice of life", "Romance", "Figure", "OST"],
     },
     {
       id: "video",
-      emoji: "\uD83C\uDFAC",
+      emoji: "🎬",
       name: "Video Edit",
-      sub: "CapCut \u2022 TikTok",
+      sub: "CapCut • TikTok",
       level: 78,
       c1: "#59c1ff",
       c2: "#7a5cff",
-      desc: "T\u1EF1 d\u1EF1ng video cho k\u00EAnh TikTok: c\u1EAFt gh\u00E9p, b\u1EAFt trend, ch\u00E8n hi\u1EC7u \u1EE9ng v\u00E0 \u0111\u1ED3ng b\u1ED9 nh\u1EA1c theo nh\u1ECBp.",
+      desc: "Tự dựng video cho kênh TikTok: cắt ghép, bắt trend, chèn hiệu ứng và đồng bộ nhạc theo nhịp.",
       bars: [
-        ["C\u1EAFt gh\u00E9p / nh\u1ECBp", 85],
-        ["Hi\u1EC7u \u1EE9ng & text", 76],
-        ["X\u1EED l\u00FD \u00E2m thanh", 72],
+        ["Cắt ghép / nhịp", 85],
+        ["Hiệu ứng & text", 76],
+        ["Xử lý âm thanh", 72],
       ],
-      chips: ["CapCut", "Premiere", "TikTok", "Nh\u1EA1c trend"],
+      chips: ["CapCut", "Premiere", "TikTok", "Nhạc trend"],
     },
     {
       id: "photo",
-      emoji: "\uD83C\uDFA8",
+      emoji: "🎨",
       name: "Photo Edit",
-      sub: "Photoshop \u2022 Lightroom",
+      sub: "Photoshop • Lightroom",
       level: 74,
       c1: "#ffd166",
       c2: "#ff8fd0",
-      desc: "Retouch \u1EA3nh ch\u00E2n dung, ch\u1EC9nh m\u00E0u theo mood v\u00E0 l\u00E0m \u1EA3nh b\u00ECa cho video, poster.",
+      desc: "Retouch ảnh chân dung, chỉnh màu theo mood và làm ảnh bìa cho video, poster.",
       bars: [
-        ["Ch\u1EC9nh m\u00E0u / mood", 80],
-        ["Retouch da & s\u00E1ng", 78],
-        ["Thi\u1EBFt k\u1EBF poster", 65],
+        ["Chỉnh màu / mood", 80],
+        ["Retouch da & sáng", 78],
+        ["Thiết kế poster", 65],
       ],
       chips: ["Photoshop", "Lightroom", "Canva"],
     },
     {
       id: "code",
-      emoji: "\uD83D\uDCBB",
+      emoji: "💻",
       name: "Web & Code",
-      sub: "HTML \u2022 CSS \u2022 JS",
+      sub: "HTML • CSS • JS",
       level: 66,
       c1: "#46e08a",
       c2: "#59c1ff",
-      desc: "T\u1EF1 l\u00E0m v\u00E0 ch\u1EC9nh trang web c\u00E1 nh\u00E2n n\u00E0y. Bi\u1EBFt HTML/CSS/JS c\u01A1 b\u1EA3n v\u00E0 c\u00E1ch \u0111\u01B0a web l\u00EAn m\u1EA1ng.",
+      desc: "Tự làm và chỉnh trang web cá nhân này. Biết HTML/CSS/JS cơ bản và cách đưa web lên mạng.",
       bars: [
         ["HTML / CSS", 78],
         ["JavaScript", 62],
@@ -104,33 +103,33 @@
     },
     {
       id: "lang",
-      emoji: "\uD83D\uDDE3\uFE0F",
-      name: "Ng\u00F4n ng\u1EEF",
-      sub: "VI \u2022 EN \u2022 \u4E2D\u6587",
+      emoji: "🗣️",
+      name: "Ngôn ngữ",
+      sub: "VI • EN • 中文",
       level: 80,
       c1: "#ff9ad5",
       c2: "#7a5cff",
-      desc: "Ti\u1EBFng Vi\u1EC7t l\u00E0 m\u1EB9 \u0111\u1EBB, ti\u1EBFng Anh d\u00F9ng h\u1EB1ng ng\u00E0y, ti\u1EBFng Trung \u0111ang h\u1ECDc th\u00EAm.",
+      desc: "Tiếng Việt là mẹ đẻ, tiếng Anh dùng hàng ngày, tiếng Trung đang học thêm.",
       bars: [
-        ["Ti\u1EBFng Vi\u1EC7t", 100],
+        ["Tiếng Việt", 100],
         ["English", 70],
-        ["\u4E2D\u6587", 55],
+        ["中文", 55],
       ],
-      chips: ["Ti\u1EBFng Vi\u1EC7t", "English", "\u4E2D\u6587"],
+      chips: ["Tiếng Việt", "English", "中文"],
     },
     {
       id: "music",
-      emoji: "\uD83C\uDFA7",
+      emoji: "🎧",
       name: "Music",
-      sub: "Lo-fi \u2022 V-pop \u2022 OST",
+      sub: "Lo-fi • V-pop • OST",
       level: 85,
       c1: "#7a5cff",
       c2: "#46e08a",
-      desc: "Nghe nh\u1EA1c c\u1EA3 ng\u00E0y: lo-fi l\u00FAc l\u00E0m vi\u1EC7c, V-pop l\u00FAc \u0111i \u0111\u01B0\u1EDDng v\u00E0 OST anime l\u00FAc t\u1ED1i.",
+      desc: "Nghe nhạc cả ngày: lo-fi lúc làm việc, V-pop lúc đi đường và OST anime lúc tối.",
       bars: [
-        ["C\u1EA3m \u00E2m / b\u1EAFt nh\u1EA1c", 88],
-        ["X\u1EBFp playlist theo mood", 92],
-        ["H\u00E1t", 60],
+        ["Cảm âm / bắt nhạc", 88],
+        ["Xếp playlist theo mood", 92],
+        ["Hát", 60],
       ],
       chips: ["Lo-fi", "V-pop", "Anime OST", "Chill"],
     },
@@ -159,7 +158,37 @@
     return n;
   }
 
-  /* ---------- dựng 8 ô kỹ năng ---------- */
+  // Hiệu ứng âm thanh nhỏ khi bấm luyện tập (Sử dụng Web Audio API tích hợp sẵn)
+  function playBeep() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // Nốt D5 vui tươi
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.1);
+    } catch (e) {
+      // Bỏ qua nếu trình duyệt chặn AudioContext chưa tương tác
+    }
+  }
+
+  // Tính danh hiệu dựa trên cấp độ kỹ năng hiện tại
+  function getRankTitle(lvl) {
+    if (lvl >= 95) return "🏆 Đại Sư Thần Sầu";
+    if (lvl >= 90) return "🔥 Siêu Cao Thủ";
+    if (lvl >= 85) return "⭐ Chuyên Gia";
+    if (lvl >= 75) return "🎯 Lão Luyện";
+    if (lvl >= 70) return "📘 Thành Thạo";
+    return "🌱 Tập Sự";
+  }
+
+  /* ---------- Dựng 8 ô kỹ năng ---------- */
   var tiles = [];
   SKILLS.forEach(function (s, i) {
     var tile = document.getElementById("skill-" + (i + 1));
@@ -167,7 +196,10 @@
     tile.dataset.skill = s.id;
     tile.style.setProperty("--sk-c1", s.c1);
     tile.style.setProperty("--sk-c2", s.c2);
-    tile.setAttribute("aria-label", s.name + " — " + s.level + "%");
+    
+    var currentXp = xp[s.id] || 0;
+    var currentLvl = Math.min(100, s.level + Math.floor(currentXp / 3));
+    tile.setAttribute("aria-label", s.name + " — Lv." + currentLvl);
     tile.innerHTML = "";
 
     var top = el("div", "sk-top");
@@ -184,8 +216,8 @@
     bar.appendChild(fill);
 
     var row = el("div", "sk-row");
-    row.appendChild(el("span", "sk-lvl", "Lv." + s.level));
-    row.appendChild(el("span", "sk-xp", "+" + (xp[s.id] || 0)));
+    row.appendChild(el("span", "sk-lvl", "Lv." + currentLvl));
+    row.appendChild(el("span", "sk-xp", "+" + currentXp + " luyện"));
 
     tile.appendChild(top);
     tile.appendChild(bar);
@@ -202,16 +234,18 @@
     tiles.push({ s: s, tile: tile, fill: fill });
   });
 
-  /* thanh % chạy lên khi trang vừa load */
+  /* Thanh % chạy mượt khi trang vừa load */
   window.addEventListener("load", function () {
     tiles.forEach(function (t) {
+      var currentXp = xp[t.s.id] || 0;
+      var currentLvl = Math.min(100, t.s.level + Math.floor(currentXp / 3));
       setTimeout(function () {
-        t.fill.style.width = t.s.level + "%";
+        t.fill.style.width = currentLvl + "%";
       }, 220);
     });
   });
 
-  /* ---------- popup chi tiết ---------- */
+  /* ---------- Popup Chi tiết ---------- */
   var modal = document.getElementById("skill-modal");
   var current = null;
 
@@ -219,11 +253,14 @@
     if (!modal) return;
     current = tiles[i];
     var s = current.s;
+    var currentXp = xp[s.id] || 0;
+    var currentLvl = Math.min(100, s.level + Math.floor(currentXp / 3));
+
     document.getElementById("sk-icon").textContent = s.emoji;
     document.getElementById("sk-title").textContent = s.name;
-    document.getElementById("sk-tag").textContent = s.sub;
+    document.getElementById("sk-tag").textContent = s.sub + " • " + getRankTitle(currentLvl);
     document.getElementById("sk-desc").textContent = s.desc;
-    document.getElementById("sk-count").textContent = "+" + (xp[s.id] || 0) + " l\u1EA7n luy\u1EC7n";
+    document.getElementById("sk-count").textContent = "+" + currentXp + " lần luyện tập (" + currentLvl + "%)";
 
     var barsBox = document.getElementById("sk-bars");
     barsBox.innerHTML = "";
@@ -282,26 +319,51 @@
         var id = current.s.id;
         xp[id] = (xp[id] || 0) + 1;
         saveXp();
-        document.getElementById("sk-count").textContent = "+" + xp[id] + " l\u1EA7n luy\u1EC7n";
+        playBeep();
+
+        // Rung nhẹ điện thoại nếu hỗ trợ (Haptic feedback)
+        if (navigator.vibrate) {
+          navigator.vibrate(40);
+        }
+
+        var currentXp = xp[id];
+        var lvl = Math.min(100, current.s.level + Math.floor(currentXp / 3));
+
+        document.getElementById("sk-count").textContent = "+" + currentXp + " lần luyện tập (" + lvl + "%)";
+        document.getElementById("sk-tag").textContent = current.s.sub + " • " + getRankTitle(lvl);
+
         var xpEl = current.tile.querySelector(".sk-xp");
-        if (xpEl) xpEl.textContent = "+" + xp[id];
-        var lvl = Math.min(100, current.s.level + Math.floor(xp[id] / 3));
+        if (xpEl) xpEl.textContent = "+" + currentXp + " luyện";
+        
         var lvlEl = current.tile.querySelector(".sk-lvl");
         if (lvlEl) lvlEl.textContent = "Lv." + lvl;
+        
         current.fill.style.width = lvl + "%";
 
+        // Thêm hiệu ứng bay chữ +1 XP độc đáo tại vị trí nút bấm
         var r = train.getBoundingClientRect();
-        var pop = el("div", "sk-pop", "+1");
+        var pop = el("div", "sk-pop", "+1 XP 🔥");
         pop.style.left = r.left + r.width / 2 + "px";
-        pop.style.top = r.top - 6 + "px";
+        pop.style.top = r.top - 10 + "px";
+        pop.style.position = "fixed";
+        pop.style.zIndex = "9999";
+        pop.style.fontWeight = "bold";
+        pop.style.color = current.s.c1;
+        pop.style.transition = "transform 0.8s ease, opacity 0.8s ease";
         document.body.appendChild(pop);
+
+        requestAnimationFrame(function() {
+          pop.style.transform = "translateY(-40px) scale(1.2)";
+          pop.style.opacity = "0";
+        });
+
         setTimeout(function () {
           pop.remove();
-        }, 950);
+        }, 800);
       });
   }
 
-  /* ---------- ô Music: hiện bài đang phát ---------- */
+  /* ---------- Ô Music: hiện bài đang phát ---------- */
   function paintNowPlaying() {
     var box = document.getElementById("np-mini");
     var tile = document.getElementById("w-music");
@@ -316,7 +378,7 @@
       box.textContent = d.title;
       if (tile) tile.classList.add("is-playing");
     } else {
-      box.textContent = "Nghe nh\u1EA1c online";
+      box.textContent = "Nghe nhạc online";
       if (tile) tile.classList.remove("is-playing");
     }
   }
@@ -324,3 +386,4 @@
   window.addEventListener("storage", paintNowPlaying);
   window.addEventListener("focus", paintNowPlaying);
 })();
+
